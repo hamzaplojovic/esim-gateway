@@ -1,0 +1,18 @@
+{
+    "status": true,
+    "data": {
+        "id": 101,
+        "name": "US 1GB 7 Days",
+        "description": "1GB data for 7 days in United States",
+        "data": 1,
+        "data_unit": "GB",
+        "validity": 7,
+        "price": 5.99,
+        "currency": "USD",
+        "country_iso2": "US",
+        "country_name": "United States",
+        "speeds": ["4G", "5G"],
+        "status": true,
+        "network_info": "T-Mobile, AT&T, Verizon"
+    }
+}

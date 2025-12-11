@@ -1,0 +1,316 @@
+"""${PROVIDER_NAME_TITLE} provider implementation.
+
+Provider: ${PROVIDER_NAME_TITLE}
+Website: ${PROVIDER_WEBSITE}
+API Docs: ${PROVIDER_API_DOCS}
+
+This provider implements the unified eSIM Gateway interface for ${PROVIDER_NAME_TITLE}.
+"""
+
+import time
+from datetime import datetime
+from typing import Any
+
+from esim_gateway.core.exceptions import (
+    ESimNotFoundException,
+    OrderNotFoundException,
+    PackageNotFoundException,
+    ProviderException,
+)
+from esim_gateway.core.http import HTTPClient
+from esim_gateway.models.catalog import (
+    Country,
+    DataAllowance,
+    GetPackageResponse,
+    ListCountriesResponse,
+    ListPackagesRequest,
+    ListPackagesResponse,
+    ListRegionsResponse,
+    Package,
+    Region,
+    SmsAllowance,
+    VoiceAllowance,
+)
+from esim_gateway.models.order import (
+    CreateOrderRequest,
+    CreateOrderResponse,
+    ESimActivation,
+    GetOrderResponse,
+    ListOrdersRequest,
+    ListOrdersResponse,
+    Order,
+    OrderItem,
+)
+from esim_gateway.models.esim import (
+    ApplyBundleRequest,
+    ApplyBundleResponse,
+    AssignedBundle,
+    BundleStatus,
+    ESim,
+    ESimStatus,
+    GetBundleStatusResponse,
+    GetESimResponse,
+    ListESimBundlesResponse,
+    ListESimsRequest,
+    ListESimsResponse,
+)
+from esim_gateway.models.usage import (
+    DataUsage,
+    GetUsageResponse,
+    UsageStats,
+)
+from esim_gateway.models.account import (
+    AccountBalance,
+    GetBalanceResponse,
+    ListTransactionsRequest,
+    ListTransactionsResponse,
+    RefundRequest,
+    RefundResponse,
+    Transaction,
+    TransactionStatus,
+    TransactionType,
+)
+from esim_gateway.providers.base import BaseProvider
+
+
+class ${PROVIDER_CLASS_NAME}Provider(BaseProvider):
+    """${PROVIDER_NAME_TITLE} provider implementation.
+
+    Endpoint Mapping:
+    -----------------
+    ${ENDPOINT_MAPPING}
+    """
+
+    name = "${PROVIDER_NAME}"
+    base_url_live = "${BASE_URL_LIVE}"
+    base_url_sandbox = "${BASE_URL_SANDBOX}"
+
+    # Cache settings
+    CACHE_TTL = 300  # 5 minutes
+
+    def __init__(
+        self,
+        api_key: str,
+        sandbox: bool = False,
+        # Add provider-specific credentials here
+        # Example: client_id: str = "", client_secret: str = ""
+    ):
+        super().__init__(api_key, sandbox)
+        self.base_url = self.base_url_sandbox if sandbox else self.base_url_live
+
+        # Initialize HTTP client
+        self._client = HTTPClient(
+            base_url=self.base_url,
+            headers={
+                # Configure authentication headers
+                # Example: "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+        )
+
+        # Initialize caches
+        self._countries_cache: list[Any] | None = None
+        self._countries_cache_time: float = 0
+        self._packages_cache: list[Any] | None = None
+        self._packages_cache_time: float = 0
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CATALOG METHODS (Required)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    async def list_countries(self) -> ListCountriesResponse:
+        """List all countries with available packages.
+
+        Maps to: ${ENDPOINT_LIST_COUNTRIES}
+        """
+        # TODO: Implement - fetch countries from provider API
+        # Example:
+        # response = await self._client.get("/countries", provider_name=self.name)
+        # countries = [self._parse_country(c) for c in response.get("data", [])]
+        raise NotImplementedError("Implement list_countries")
+
+    async def list_regions(self) -> ListRegionsResponse:
+        """List all regions.
+
+        Maps to: ${ENDPOINT_LIST_REGIONS}
+        """
+        # TODO: Implement - fetch regions from provider API
+        raise NotImplementedError("Implement list_regions")
+
+    async def list_packages(self, request: ListPackagesRequest) -> ListPackagesResponse:
+        """List packages with optional filters.
+
+        Maps to: ${ENDPOINT_LIST_PACKAGES}
+        """
+        # TODO: Implement - fetch packages with filtering
+        raise NotImplementedError("Implement list_packages")
+
+    async def get_package(self, package_id: str) -> GetPackageResponse:
+        """Get a single package by ID.
+
+        Maps to: ${ENDPOINT_GET_PACKAGE}
+        """
+        # TODO: Implement - fetch single package
+        raise NotImplementedError("Implement get_package")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # ORDER METHODS (Required)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    async def create_order(self, request: CreateOrderRequest) -> CreateOrderResponse:
+        """Create an order for eSIM bundles.
+
+        Maps to: ${ENDPOINT_CREATE_ORDER}
+        """
+        # TODO: Implement - create order via provider API
+        raise NotImplementedError("Implement create_order")
+
+    async def get_order(self, order_id: str) -> GetOrderResponse:
+        """Get order details by ID.
+
+        Maps to: ${ENDPOINT_GET_ORDER}
+        """
+        # TODO: Implement - fetch order details
+        raise NotImplementedError("Implement get_order")
+
+    async def list_orders(self, request: ListOrdersRequest) -> ListOrdersResponse:
+        """List orders with optional filters.
+
+        Maps to: ${ENDPOINT_LIST_ORDERS}
+        """
+        # TODO: Implement - list orders with pagination
+        raise NotImplementedError("Implement list_orders")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # ESIM MANAGEMENT METHODS (Required)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    async def list_esims(self, request: ListESimsRequest) -> ListESimsResponse:
+        """List eSIMs with optional filters.
+
+        Maps to: ${ENDPOINT_LIST_ESIMS}
+        """
+        # TODO: Implement - list eSIMs
+        raise NotImplementedError("Implement list_esims")
+
+    async def get_esim(self, iccid: str) -> GetESimResponse:
+        """Get eSIM details by ICCID.
+
+        Maps to: ${ENDPOINT_GET_ESIM}
+        """
+        # TODO: Implement - fetch eSIM details
+        raise NotImplementedError("Implement get_esim")
+
+    async def apply_bundle(self, request: ApplyBundleRequest) -> ApplyBundleResponse:
+        """Apply a bundle/package to an eSIM.
+
+        Maps to: ${ENDPOINT_APPLY_BUNDLE}
+        """
+        # TODO: Implement - apply bundle to eSIM
+        raise NotImplementedError("Implement apply_bundle")
+
+    async def list_esim_bundles(self, iccid: str) -> ListESimBundlesResponse:
+        """List all bundles assigned to an eSIM.
+
+        Maps to: ${ENDPOINT_LIST_ESIM_BUNDLES}
+        """
+        # TODO: Implement - list bundles on eSIM
+        raise NotImplementedError("Implement list_esim_bundles")
+
+    async def get_bundle_status(
+        self, iccid: str, bundle_name: str
+    ) -> GetBundleStatusResponse:
+        """Get status of a specific bundle on an eSIM.
+
+        Maps to: ${ENDPOINT_GET_BUNDLE_STATUS}
+        """
+        # TODO: Implement - get bundle status
+        raise NotImplementedError("Implement get_bundle_status")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # USAGE METHODS (Required)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    async def get_usage(
+        self, iccid: str, bundle_name: str | None = None
+    ) -> GetUsageResponse:
+        """Get current usage statistics for an eSIM.
+
+        Maps to: ${ENDPOINT_GET_USAGE}
+        """
+        # TODO: Implement - fetch usage data
+        raise NotImplementedError("Implement get_usage")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # ACCOUNT METHODS (Required)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    async def get_balance(self) -> GetBalanceResponse:
+        """Get current account balance.
+
+        Maps to: ${ENDPOINT_GET_BALANCE}
+        """
+        # TODO: Implement - fetch account balance
+        raise NotImplementedError("Implement get_balance")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # HELPER METHODS
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def _parse_country(self, data: dict[str, Any]) -> Country:
+        """Parse provider country response to unified Country model."""
+        return Country(
+            iso2=data.get("iso2", ""),  # Map to provider's field
+            iso3=data.get("iso3"),
+            name=data.get("name", ""),
+            image_url=data.get("image"),
+        )
+
+    def _parse_package(self, data: dict[str, Any]) -> Package:
+        """Parse provider package response to unified Package model."""
+        # Map data allowance
+        data_mb = data.get("data_mb", 0)
+        is_unlimited = data.get("unlimited", False)
+
+        data_allowance = DataAllowance(
+            amount_mb=data_mb if not is_unlimited else None,
+            is_unlimited=is_unlimited,
+        )
+
+        return Package(
+            id=str(data.get("id", "")),
+            name=data.get("name", ""),
+            countries=[],  # Parse countries
+            data=data_allowance,
+            validity_days=data.get("validity", 0),
+            price=float(data.get("price", 0)),
+            currency=data.get("currency", "USD"),
+        )
+
+    def _parse_esim(self, data: dict[str, Any]) -> ESim:
+        """Parse provider eSIM response to unified ESim model."""
+        return ESim(
+            iccid=data.get("iccid", ""),
+            status=self._map_esim_status(data.get("status", "")),
+            lpa_string=data.get("lpa_string"),
+            smdp_address=data.get("smdp_address"),
+            matching_id=data.get("matching_id"),
+            assigned_bundles=[],
+        )
+
+    def _map_esim_status(self, status: str) -> ESimStatus:
+        """Map provider status to unified ESimStatus."""
+        status_map = {
+            # Map provider-specific statuses to unified enum
+            # "provider_active": ESimStatus.ACTIVE,
+            # "provider_installed": ESimStatus.INSTALLED,
+        }
+        return status_map.get(status.lower(), ESimStatus.UNUSED)
+
+    def _map_bundle_status(self, status: str) -> BundleStatus:
+        """Map provider bundle status to unified BundleStatus."""
+        status_map = {
+            # Map provider-specific statuses
+            # "active": BundleStatus.ACTIVE,
+        }
+        return status_map.get(status.lower(), BundleStatus.INACTIVE)

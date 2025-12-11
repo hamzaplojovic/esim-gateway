@@ -1,0 +1,250 @@
+# Provider Endpoint Mapping Template
+# ==================================
+#
+# This file documents how a provider's API endpoints map to our unified schema.
+# Fill this out before implementing a new provider to plan the integration.
+#
+# Instructions:
+# 1. Copy this file to: docs/providers/<provider_name>_mapping.yaml
+# 2. Fill in all sections based on the provider's API documentation
+# 3. Use this as a reference when implementing the provider
+
+provider:
+  name: ""                    # e.g., "airalo"
+  display_name: ""            # e.g., "Airalo"
+  website: ""                 # e.g., "https://airalo.com"
+  api_docs: ""                # e.g., "https://docs.airalo.com"
+  api_version: ""             # e.g., "v2"
+
+authentication:
+  type: ""                    # "api_key" | "oauth2" | "bearer" | "basic" | "custom"
+  header_name: ""             # e.g., "Authorization", "X-API-Key"
+  header_format: ""           # e.g., "Bearer {token}", "{api_key}"
+  # For OAuth2:
+  token_url: ""
+  refresh_url: ""
+  scopes: []
+
+base_urls:
+  production: ""              # e.g., "https://api.provider.com/v2"
+  sandbox: ""                 # e.g., "https://sandbox.provider.com/v2"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ENDPOINT MAPPINGS
+# ─────────────────────────────────────────────────────────────────────────────
+# For each unified endpoint, document the provider's corresponding endpoint
+
+endpoints:
+  # ─────────────────────────────────────────────────────────────────────────
+  # CATALOG
+  # ─────────────────────────────────────────────────────────────────────────
+
+  list_countries:
+    unified: "GET /countries"
+    provider_endpoint: ""           # e.g., "GET /destinations"
+    provider_method: "GET"
+    notes: ""
+    response_mapping:
+      iso2: ""                      # e.g., "country_code"
+      iso3: ""                      # e.g., "country_iso3"
+      name: ""                      # e.g., "country_name"
+      image_url: ""                 # e.g., "flag_url"
+
+  list_regions:
+    unified: "GET /regions"
+    provider_endpoint: ""           # e.g., "GET /regions"
+    provider_method: "GET"
+    notes: ""
+    response_mapping:
+      id: ""
+      name: ""
+      countries: ""
+
+  list_packages:
+    unified: "GET /packages"
+    provider_endpoint: ""           # e.g., "GET /packages"
+    provider_method: "GET"
+    supports_filtering: true
+    filter_params:
+      country: ""                   # e.g., "country_code"
+      region: ""                    # e.g., "region_id"
+    pagination:
+      type: ""                      # "offset" | "cursor" | "page"
+      page_param: ""                # e.g., "page"
+      limit_param: ""               # e.g., "per_page"
+    response_mapping:
+      id: ""                        # e.g., "package_id"
+      name: ""                      # e.g., "title"
+      data_mb: ""                   # e.g., "data"
+      validity_days: ""             # e.g., "validity"
+      price: ""                     # e.g., "price"
+      currency: ""                  # e.g., "currency_code"
+
+  get_package:
+    unified: "GET /packages/{id}"
+    provider_endpoint: ""           # e.g., "GET /packages/{package_id}"
+    provider_method: "GET"
+    path_params:
+      id: ""                        # e.g., "package_id"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # ORDERS
+  # ─────────────────────────────────────────────────────────────────────────
+
+  create_order:
+    unified: "POST /orders"
+    provider_endpoint: ""           # e.g., "POST /orders"
+    provider_method: "POST"
+    request_mapping:
+      package_id: ""                # e.g., "package_id"
+      quantity: ""                  # e.g., "quantity"
+      customer_email: ""            # e.g., "email"
+    response_mapping:
+      order_id: ""                  # e.g., "id"
+      status: ""                    # e.g., "status"
+      iccid: ""                     # e.g., "sims[].iccid"
+      lpa_string: ""                # e.g., "sims[].qr_code"
+
+  get_order:
+    unified: "GET /orders/{id}"
+    provider_endpoint: ""           # e.g., "GET /orders/{order_id}"
+    provider_method: "GET"
+    path_params:
+      id: ""
+
+  list_orders:
+    unified: "GET /orders"
+    provider_endpoint: ""           # e.g., "GET /orders"
+    provider_method: "GET"
+    pagination:
+      type: ""
+      page_param: ""
+      limit_param: ""
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # ESIM MANAGEMENT
+  # ─────────────────────────────────────────────────────────────────────────
+
+  list_esims:
+    unified: "GET /esims"
+    provider_endpoint: ""           # e.g., "GET /sims"
+    provider_method: "GET"
+    notes: ""
+
+  get_esim:
+    unified: "GET /esims/{iccid}"
+    provider_endpoint: ""           # e.g., "GET /sims/{iccid}"
+    provider_method: "GET"
+    path_params:
+      iccid: ""                     # e.g., "iccid"
+    response_mapping:
+      iccid: ""
+      status: ""
+      lpa_string: ""
+      smdp_address: ""
+
+  apply_bundle:
+    unified: "POST /esims/{iccid}/apply"
+    provider_endpoint: ""           # e.g., "POST /sims/{iccid}/topup"
+    provider_method: "POST"
+    notes: ""
+
+  list_esim_bundles:
+    unified: "GET /esims/{iccid}/bundles"
+    provider_endpoint: ""           # e.g., "GET /sims/{iccid}/packages"
+    provider_method: "GET"
+
+  get_bundle_status:
+    unified: "GET /esims/{iccid}/bundles/{name}"
+    provider_endpoint: ""
+    provider_method: "GET"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # USAGE
+  # ─────────────────────────────────────────────────────────────────────────
+
+  get_usage:
+    unified: "GET /esims/{iccid}/usage"
+    provider_endpoint: ""           # e.g., "GET /sims/{iccid}/usage"
+    provider_method: "GET"
+    response_mapping:
+      used_mb: ""                   # e.g., "data_used"
+      remaining_mb: ""              # e.g., "data_remaining"
+      total_mb: ""                  # e.g., "data_total"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # ACCOUNT
+  # ─────────────────────────────────────────────────────────────────────────
+
+  get_balance:
+    unified: "GET /account/balance"
+    provider_endpoint: ""           # e.g., "GET /account/balance"
+    provider_method: "GET"
+    response_mapping:
+      balance: ""                   # e.g., "balance"
+      currency: ""                  # e.g., "currency"
+
+  list_transactions:
+    unified: "GET /account/transactions"
+    provider_endpoint: ""           # e.g., "GET /transactions"
+    provider_method: "GET"
+    supported: true                 # Set to false if not available
+
+  request_refund:
+    unified: "POST /account/refund"
+    provider_endpoint: ""           # e.g., "POST /refunds"
+    provider_method: "POST"
+    supported: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STATUS MAPPINGS
+# ─────────────────────────────────────────────────────────────────────────────
+# Map provider-specific status values to unified enums
+
+status_mappings:
+  esim_status:
+    # provider_value: unified_value
+    # Example:
+    # "ACTIVE": "active"
+    # "NOT_INSTALLED": "unused"
+    # "INSTALLED": "installed"
+    # "DISABLED": "disabled"
+
+  bundle_status:
+    # provider_value: unified_value
+    # Example:
+    # "ACTIVE": "active"
+    # "EXPIRED": "expired"
+    # "PENDING": "inactive"
+
+  order_status:
+    # provider_value: unified_value
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ERROR MAPPINGS
+# ─────────────────────────────────────────────────────────────────────────────
+# Map provider error codes to appropriate exceptions
+
+error_mappings:
+  # provider_error_code: exception_type
+  # Example:
+  # "NOT_FOUND": "PackageNotFoundException"
+  # "INVALID_ICCID": "ESimNotFoundException"
+  # "INSUFFICIENT_BALANCE": "ProviderException"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NOTES
+# ─────────────────────────────────────────────────────────────────────────────
+
+notes:
+  limitations: []
+    # - "Provider doesn't support bulk orders"
+    # - "Usage data has 1-hour delay"
+
+  special_handling: []
+    # - "Requires webhook for order status updates"
+    # - "Token expires every 24 hours"
+
+  testing:
+    sandbox_available: true
+    test_credentials_url: ""

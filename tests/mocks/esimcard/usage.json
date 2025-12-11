@@ -1,0 +1,12 @@
+{
+    "status": true,
+    "data": {
+        "iccid": "8901234567890123456",
+        "package_name": "US 1GB 7 Days",
+        "initial_data_quantity": 1,
+        "initial_data_unit": "GB",
+        "rem_data_quantity": 0.75,
+        "rem_data_unit": "GB",
+        "unlimited_data": false
+    }
+}

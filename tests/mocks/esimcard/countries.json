@@ -1,0 +1,35 @@
+{
+    "status": true,
+    "data": [
+        {
+            "id": 1,
+            "iso2": "US",
+            "name": "United States",
+            "flag_url": "https://esimcard.com/flags/us.png"
+        },
+        {
+            "id": 2,
+            "iso2": "DE",
+            "name": "Germany",
+            "flag_url": "https://esimcard.com/flags/de.png"
+        },
+        {
+            "id": 3,
+            "iso2": "FR",
+            "name": "France",
+            "flag_url": "https://esimcard.com/flags/fr.png"
+        },
+        {
+            "id": 4,
+            "iso2": "GB",
+            "name": "United Kingdom",
+            "flag_url": "https://esimcard.com/flags/gb.png"
+        }
+    ],
+    "meta": {
+        "total": 4,
+        "perPage": 50,
+        "currentPage": 1,
+        "lastPage": 1
+    }
+}

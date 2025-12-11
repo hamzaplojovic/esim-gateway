@@ -1,0 +1,16 @@
+{
+  "success": true,
+  "order_id": "ZTX-ORD-004",
+  "status": "Completed",
+  "total": "$ 5.09",
+  "sims": [
+    {
+      "iccid": "8944500000000000002",
+      "matchingID": "ZTX-MATCH-002",
+      "smdpAddress": "smdp.zetexa.com",
+      "lpa_server": "LPA:1$smdp.zetexa.com$ZTX-MATCH-002",
+      "package_name": "Germany 1GB - 7 Days",
+      "unit_price_net_amount": "$ 5.09"
+    }
+  ]
+}

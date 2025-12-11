@@ -1,0 +1,15 @@
+{
+    "status": true,
+    "message": "Purchase successful",
+    "data": {
+        "order_id": "8901234567890123458",
+        "iccid": "8901234567890123458",
+        "lpa_string": "LPA:1$smdp.io$K2-1234567892",
+        "smdp_address": "smdp.io",
+        "matching_id": "K2-1234567892",
+        "price": 5.99,
+        "package_name": "US 1GB 7 Days",
+        "package_type_id": 101,
+        "status": "Released"
+    }
+}

@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "iccid": "8944500000000000001",
+  "matchingID": "ZTX-MATCH-001",
+  "smdpAddress": "smdp.zetexa.com",
+  "lpa_server": "LPA:1$smdp.zetexa.com$ZTX-MATCH-001",
+  "package_name": "Europe 5GB - 30 Days",
+  "status": "Active"
+}

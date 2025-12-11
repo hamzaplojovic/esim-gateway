@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "name": "Europe",
+    "image": "https://example.com/regions/europe.png"
+  },
+  {
+    "id": 2,
+    "name": "North America",
+    "image": "https://example.com/regions/north_america.png"
+  },
+  {
+    "id": 3,
+    "name": "Asia",
+    "image": "https://example.com/regions/asia.png"
+  }
+]

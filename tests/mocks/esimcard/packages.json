@@ -1,0 +1,55 @@
+{
+    "status": true,
+    "data": [
+        {
+            "id": 101,
+            "name": "US 1GB 7 Days",
+            "description": "1GB data for 7 days in United States",
+            "data": 1,
+            "data_unit": "GB",
+            "validity": 7,
+            "price": 5.99,
+            "currency": "USD",
+            "country_iso2": "US",
+            "country_name": "United States",
+            "speeds": ["4G", "5G"],
+            "status": true
+        },
+        {
+            "id": 102,
+            "name": "Europe 5GB 30 Days",
+            "description": "5GB data for 30 days across Europe",
+            "data": 5,
+            "data_unit": "GB",
+            "validity": 30,
+            "price": 24.99,
+            "currency": "USD",
+            "countries": [
+                {"iso2": "DE", "name": "Germany"},
+                {"iso2": "FR", "name": "France"},
+                {"iso2": "GB", "name": "United Kingdom"}
+            ],
+            "speeds": ["4G"],
+            "status": true
+        },
+        {
+            "id": 103,
+            "name": "Global 10GB 30 Days",
+            "description": "10GB data for 30 days worldwide",
+            "data": 10,
+            "data_unit": "GB",
+            "validity": 30,
+            "price": 49.99,
+            "currency": "USD",
+            "unlimited_data": false,
+            "speeds": ["4G", "5G"],
+            "status": true
+        }
+    ],
+    "meta": {
+        "total": 3,
+        "perPage": 50,
+        "currentPage": 1,
+        "lastPage": 1
+    }
+}

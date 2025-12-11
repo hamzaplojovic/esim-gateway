@@ -1,0 +1,26 @@
+{
+    "status": true,
+    "data": [
+        {
+            "id": 1,
+            "name": "Europe",
+            "image": "https://esimcard.com/regions/europe.png"
+        },
+        {
+            "id": 2,
+            "name": "North America",
+            "image": "https://esimcard.com/regions/north-america.png"
+        },
+        {
+            "id": 3,
+            "name": "Asia",
+            "image": "https://esimcard.com/regions/asia.png"
+        }
+    ],
+    "meta": {
+        "total": 3,
+        "perPage": 50,
+        "currentPage": 1,
+        "lastPage": 1
+    }
+}

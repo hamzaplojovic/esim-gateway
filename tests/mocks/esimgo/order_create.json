@@ -1,0 +1,24 @@
+{
+  "orderReference": "ORD-ESG-003",
+  "status": "completed",
+  "statusMessage": "Order created",
+  "total": 4.50,
+  "currency": "USD",
+  "createdDate": "2025-12-10T10:00:00Z",
+  "assigned": true,
+  "order": [
+    {
+      "item": "esim_1GB_7D_DE",
+      "quantity": 1,
+      "pricePerUnit": 4.50,
+      "subTotal": 4.50,
+      "esims": [
+        {
+          "iccid": "8901234567890123457",
+          "matchingId": "M-DEF456",
+          "smdpAddress": "smdp.esim-go.com"
+        }
+      ]
+    }
+  ]
+}

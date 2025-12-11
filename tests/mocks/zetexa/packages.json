@@ -1,0 +1,66 @@
+[
+  {
+    "package_id": "1001",
+    "package_name": "Germany 1GB - 7 Days",
+    "data": "1GB",
+    "data_in_mb": 1024,
+    "validity": 7,
+    "price": 4.50,
+    "coverage": "4G",
+    "network": "Telekom",
+    "call": 0,
+    "sms": 0,
+    "status": true,
+    "fup_policy": null,
+    "countries": [
+      {
+        "countryiso2": "DE",
+        "countryname": "Germany"
+      }
+    ]
+  },
+  {
+    "package_id": "1002",
+    "package_name": "Europe 3GB - 30 Days",
+    "data": "3GB",
+    "data_in_mb": 3072,
+    "validity": 30,
+    "price": 15.00,
+    "coverage": "4G/5G",
+    "network": "Multi-carrier",
+    "call": 60,
+    "sms": 30,
+    "status": true,
+    "fup_policy": null,
+    "countries": [
+      {
+        "countryiso2": "DE",
+        "countryname": "Germany"
+      },
+      {
+        "countryiso2": "FR",
+        "countryname": "France"
+      }
+    ]
+  },
+  {
+    "package_id": "1003",
+    "package_name": "USA Unlimited - 7 Days",
+    "data": "Unlimited",
+    "data_in_mb": 0,
+    "validity": 7,
+    "price": 11.99,
+    "coverage": "5G",
+    "network": "T-Mobile",
+    "call": 0,
+    "sms": 0,
+    "status": true,
+    "fup_policy": "30GB at high speed, then throttled to 128kbps",
+    "countries": [
+      {
+        "countryiso2": "US",
+        "countryname": "United States"
+      }
+    ]
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "iso2": "DE",
+    "iso3": "DEU",
+    "name": "Germany",
+    "image": "https://example.com/flags/de.png"
+  },
+  {
+    "iso2": "FR",
+    "iso3": "FRA",
+    "name": "France",
+    "image": "https://example.com/flags/fr.png"
+  },
+  {
+    "iso2": "US",
+    "iso3": "USA",
+    "name": "United States",
+    "image": "https://example.com/flags/us.png"
+  }
+]

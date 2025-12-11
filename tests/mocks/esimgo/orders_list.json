@@ -1,0 +1,47 @@
+{
+  "orders": [
+    {
+      "orderReference": "ORD-ESG-001",
+      "status": "completed",
+      "statusMessage": "Order completed successfully",
+      "total": 12.00,
+      "currency": "USD",
+      "createdDate": "2025-12-10T08:30:00Z",
+      "assigned": true,
+      "order": [
+        {
+          "item": "esim_3GB_30D_EU",
+          "quantity": 1,
+          "pricePerUnit": 12.00,
+          "subTotal": 12.00,
+          "esims": [
+            {
+              "iccid": "8901234567890123456",
+              "matchingId": "M-ABC123",
+              "smdpAddress": "smdp.esim-go.com"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "orderReference": "ORD-ESG-002",
+      "status": "pending",
+      "statusMessage": "Processing",
+      "total": 9.99,
+      "currency": "USD",
+      "createdDate": "2025-12-09T14:20:00Z",
+      "assigned": false,
+      "order": [
+        {
+          "item": "esim_UNL_7D_US",
+          "quantity": 1,
+          "pricePerUnit": 9.99,
+          "subTotal": 9.99,
+          "esims": []
+        }
+      ]
+    }
+  ],
+  "rows": 2
+}

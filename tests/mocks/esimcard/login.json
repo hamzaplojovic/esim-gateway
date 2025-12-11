@@ -1,0 +1,6 @@
+{
+    "status": true,
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.test_token",
+    "token_type": "Bearer",
+    "expires_in": 86400
+}

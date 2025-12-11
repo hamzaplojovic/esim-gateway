@@ -1,0 +1,83 @@
+{
+  "bundles": [
+    {
+      "name": "esim_1GB_7D_DE",
+      "description": "Germany 1GB - 7 Days",
+      "dataAmount": 1024,
+      "duration": 7,
+      "price": 4.50,
+      "unlimited": false,
+      "autostart": false,
+      "speed": ["4G", "LTE"],
+      "groups": ["europe"],
+      "countries": [
+        {
+          "iso": "DE",
+          "name": "Germany",
+          "region": "Europe"
+        }
+      ],
+      "allowances": []
+    },
+    {
+      "name": "esim_3GB_30D_EU",
+      "description": "Europe 3GB - 30 Days",
+      "dataAmount": 3072,
+      "duration": 30,
+      "price": 12.00,
+      "unlimited": false,
+      "autostart": true,
+      "speed": ["4G", "5G"],
+      "groups": ["europe", "regional"],
+      "countries": [
+        {
+          "iso": "DE",
+          "name": "Germany",
+          "region": "Europe"
+        },
+        {
+          "iso": "FR",
+          "name": "France",
+          "region": "Europe"
+        },
+        {
+          "iso": "IT",
+          "name": "Italy",
+          "region": "Europe"
+        }
+      ],
+      "allowances": [
+        {
+          "type": "VOICE",
+          "amount": 100,
+          "unlimited": false
+        },
+        {
+          "type": "SMS",
+          "amount": 50,
+          "unlimited": false
+        }
+      ]
+    },
+    {
+      "name": "esim_UNL_7D_US",
+      "description": "USA Unlimited - 7 Days",
+      "dataAmount": 0,
+      "duration": 7,
+      "price": 9.99,
+      "unlimited": true,
+      "autostart": false,
+      "speed": ["4G", "5G"],
+      "groups": ["north_america"],
+      "countries": [
+        {
+          "iso": "US",
+          "name": "United States",
+          "region": "North America"
+        }
+      ],
+      "allowances": []
+    }
+  ],
+  "total": 3
+}

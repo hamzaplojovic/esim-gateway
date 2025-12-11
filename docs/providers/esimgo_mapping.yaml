@@ -1,0 +1,242 @@
+# eSIM Go Provider Mapping
+# ==========================
+#
+# This document shows how eSIM Go's API endpoints map to our unified schema.
+# Use this as a reference when implementing new providers.
+
+provider:
+  name: "esimgo"
+  display_name: "eSIM Go"
+  website: "https://www.esim-go.com"
+  api_docs: "https://docs.esim-go.com"
+  api_version: "v2.5"
+
+authentication:
+  type: "api_key"
+  header_name: "X-API-Key"
+  header_format: "{api_key}"
+
+base_urls:
+  production: "https://api.esim-go.com/v2.5"
+  sandbox: "https://sandbox.esim-go.com/v2.5"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ENDPOINT MAPPINGS
+# ─────────────────────────────────────────────────────────────────────────────
+
+endpoints:
+  # ─────────────────────────────────────────────────────────────────────────
+  # CATALOG
+  # ─────────────────────────────────────────────────────────────────────────
+
+  list_countries:
+    unified: "GET /countries"
+    provider_endpoint: "GET /catalogue/country"
+    provider_method: "GET"
+    notes: "Returns all countries with package counts"
+    response_mapping:
+      iso2: "iso"
+      iso3: "iso3"
+      name: "name"
+      image_url: "image.url"
+
+  list_regions:
+    unified: "GET /regions"
+    provider_endpoint: "GET /catalogue/region"
+    provider_method: "GET"
+    notes: "Returns regional packages"
+    response_mapping:
+      id: "region"
+      name: "region"
+      countries: "countries[]"
+
+  list_packages:
+    unified: "GET /packages"
+    provider_endpoint: "GET /catalogue"
+    provider_method: "GET"
+    supports_filtering: true
+    filter_params:
+      country: "isoCountryCode"
+      region: "region"
+    pagination:
+      type: "none"
+      page_param: null
+      limit_param: null
+    response_mapping:
+      id: "name"
+      name: "description"
+      data_mb: "dataGB * 1024"
+      validity_days: "duration"
+      price: "price"
+      currency: "currency"
+
+  get_package:
+    unified: "GET /packages/{id}"
+    provider_endpoint: "GET /catalogue"
+    provider_method: "GET"
+    path_params:
+      id: "name (filter from list)"
+    notes: "eSIM Go doesn't have single package endpoint, filter from list"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # ORDERS
+  # ─────────────────────────────────────────────────────────────────────────
+
+  create_order:
+    unified: "POST /orders"
+    provider_endpoint: "POST /orders"
+    provider_method: "POST"
+    request_mapping:
+      package_id: "type"
+      quantity: "quantity"
+      customer_email: null
+    response_mapping:
+      order_id: "orderReference"
+      status: "status"
+      iccid: "esims[].iccid"
+      lpa_string: "esims[].lpaString"
+
+  get_order:
+    unified: "GET /orders/{id}"
+    provider_endpoint: "GET /orders/{orderReference}"
+    provider_method: "GET"
+    path_params:
+      id: "orderReference"
+
+  list_orders:
+    unified: "GET /orders"
+    provider_endpoint: "GET /orders"
+    provider_method: "GET"
+    pagination:
+      type: "page"
+      page_param: "page"
+      limit_param: "perPage"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # ESIM MANAGEMENT
+  # ─────────────────────────────────────────────────────────────────────────
+
+  list_esims:
+    unified: "GET /esims"
+    provider_endpoint: "GET /esims"
+    provider_method: "GET"
+    notes: "Returns all eSIMs in organization"
+
+  get_esim:
+    unified: "GET /esims/{iccid}"
+    provider_endpoint: "GET /esims/{iccid}"
+    provider_method: "GET"
+    path_params:
+      iccid: "iccid"
+    response_mapping:
+      iccid: "iccid"
+      status: "status"
+      lpa_string: "lpaString"
+      smdp_address: "smdpAddress"
+
+  apply_bundle:
+    unified: "POST /esims/{iccid}/apply"
+    provider_endpoint: "POST /esims/apply"
+    provider_method: "POST"
+    notes: "Applies a bundle to existing eSIM"
+
+  list_esim_bundles:
+    unified: "GET /esims/{iccid}/bundles"
+    provider_endpoint: "GET /esims/{iccid}/bundles"
+    provider_method: "GET"
+
+  get_bundle_status:
+    unified: "GET /esims/{iccid}/bundles/{name}"
+    provider_endpoint: "GET /esims/{iccid}/bundles/{name}"
+    provider_method: "GET"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # USAGE
+  # ─────────────────────────────────────────────────────────────────────────
+
+  get_usage:
+    unified: "GET /esims/{iccid}/usage"
+    provider_endpoint: "GET /esims/{iccid}/bundles/{name}"
+    provider_method: "GET"
+    notes: "Usage is derived from bundle status"
+    response_mapping:
+      used_mb: "calculated from initialData - remainingData"
+      remaining_mb: "remainingData * 1024"
+      total_mb: "initialData * 1024"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # ACCOUNT
+  # ─────────────────────────────────────────────────────────────────────────
+
+  get_balance:
+    unified: "GET /account/balance"
+    provider_endpoint: "GET /organisation"
+    provider_method: "GET"
+    response_mapping:
+      balance: "balance"
+      currency: "currency"
+
+  list_transactions:
+    unified: "GET /account/transactions"
+    provider_endpoint: null
+    provider_method: null
+    supported: false
+    notes: "eSIM Go doesn't have transaction history API"
+
+  request_refund:
+    unified: "POST /account/refund"
+    provider_endpoint: "POST /inventory/refund"
+    provider_method: "POST"
+    supported: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# STATUS MAPPINGS
+# ─────────────────────────────────────────────────────────────────────────────
+
+status_mappings:
+  esim_status:
+    "ALLOCATED": "unused"
+    "BPP_INSTALLATION": "installed"
+    "ENABLE": "active"
+    "DISABLE": "disabled"
+    "DELETED": "deleted"
+
+  bundle_status:
+    "Active": "active"
+    "InActive": "inactive"
+    "Expired": "expired"
+
+  order_status:
+    "completed": "completed"
+    "pending": "pending"
+    "failed": "failed"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ERROR MAPPINGS
+# ─────────────────────────────────────────────────────────────────────────────
+
+error_mappings:
+  "BUNDLE_NOT_FOUND": "PackageNotFoundException"
+  "ESIM_NOT_FOUND": "ESimNotFoundException"
+  "ORDER_NOT_FOUND": "OrderNotFoundException"
+  "INVALID_ICCID": "ESimNotFoundException"
+  "INSUFFICIENT_BALANCE": "ProviderException"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NOTES
+# ─────────────────────────────────────────────────────────────────────────────
+
+notes:
+  limitations:
+    - "No transaction history API"
+    - "Single package lookup requires filtering from list"
+    - "Data values in catalogue are in GB, must convert to MB"
+
+  special_handling:
+    - "Bundle names are case-sensitive"
+    - "ICCID must be 19-20 digits"
+    - "API key expires; check X-API-Key-Expires header"
+
+  testing:
+    sandbox_available: true
+    test_credentials_url: "https://docs.esim-go.com/sandbox"
