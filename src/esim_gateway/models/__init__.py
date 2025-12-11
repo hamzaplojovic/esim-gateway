@@ -1,6 +1,22 @@
 """Unified eSIM Gateway models."""
 
 # Catalog models
+# Account/wallet models
+from esim_gateway.models.account import (
+    AccountBalance,
+    AccountInfo,
+    GetAccountInfoResponse,
+    GetBalanceResponse,
+    ListTransactionsRequest,
+    ListTransactionsResponse,
+    RefundRequest,
+    RefundResponse,
+    TopUpRequest,
+    TopUpResponse,
+    Transaction,
+    TransactionStatus,
+    TransactionType,
+)
 from esim_gateway.models.catalog import (
     Country,
     DataAllowance,
@@ -16,19 +32,6 @@ from esim_gateway.models.catalog import (
     Region,
     SmsAllowance,
     VoiceAllowance,
-)
-
-# Order models
-from esim_gateway.models.order import (
-    CreateOrderRequest,
-    CreateOrderResponse,
-    CustomerInfo,
-    ESimActivation,
-    GetOrderResponse,
-    ListOrdersRequest,
-    ListOrdersResponse,
-    Order,
-    OrderItem,
 )
 
 # eSIM management models
@@ -50,39 +53,6 @@ from esim_gateway.models.esim import (
     RevokeBundleResponse,
 )
 
-# Usage models
-from esim_gateway.models.usage import (
-    DataUsage,
-    GetUsageHistoryRequest,
-    GetUsageHistoryResponse,
-    GetUsageRequest,
-    GetUsageResponse,
-    SmsUsage,
-    UsageHistory,
-    UsageRecord,
-    UsageStats,
-    UsageType,
-    UsageUnit,
-    VoiceUsage,
-)
-
-# Account/wallet models
-from esim_gateway.models.account import (
-    AccountBalance,
-    AccountInfo,
-    GetAccountInfoResponse,
-    GetBalanceResponse,
-    ListTransactionsRequest,
-    ListTransactionsResponse,
-    RefundRequest,
-    RefundResponse,
-    TopUpRequest,
-    TopUpResponse,
-    Transaction,
-    TransactionStatus,
-    TransactionType,
-)
-
 # Inventory models
 from esim_gateway.models.inventory import (
     AssignmentInfo,
@@ -100,6 +70,35 @@ from esim_gateway.models.inventory import (
     ListInventoryResponse,
     RestockRequest,
     RestockResponse,
+)
+
+# Order models
+from esim_gateway.models.order import (
+    CreateOrderRequest,
+    CreateOrderResponse,
+    CustomerInfo,
+    ESimActivation,
+    GetOrderResponse,
+    ListOrdersRequest,
+    ListOrdersResponse,
+    Order,
+    OrderItem,
+)
+
+# Usage models
+from esim_gateway.models.usage import (
+    DataUsage,
+    GetUsageHistoryRequest,
+    GetUsageHistoryResponse,
+    GetUsageRequest,
+    GetUsageResponse,
+    SmsUsage,
+    UsageHistory,
+    UsageRecord,
+    UsageStats,
+    UsageType,
+    UsageUnit,
+    VoiceUsage,
 )
 
 __all__ = [

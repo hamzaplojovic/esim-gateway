@@ -2,11 +2,11 @@
 
 import asyncio
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from functools import wraps
-from typing import Any, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar, cast
 
 import httpx
 from tenacity import (
@@ -53,7 +53,8 @@ def with_retry(func: Callable[P, T]) -> Callable[P, T]:
             reraise=True,
         )
         async def _inner() -> T:
-            return await func(*args, **kwargs)
+            result = func(*args, **kwargs)
+            return await cast(Awaitable[T], result)
 
         try:
             return await _inner()
@@ -61,7 +62,7 @@ def with_retry(func: Callable[P, T]) -> Callable[P, T]:
             # Re-raise the last exception
             raise
 
-    return wrapper  # type: ignore[return-value]
+    return cast(Callable[P, T], wrapper)
 
 
 class CircuitState(Enum):
@@ -92,9 +93,10 @@ class CircuitBreaker:
     @property
     def state(self) -> CircuitState:
         """Get current circuit state, handling timeout transition."""
-        if self._state == CircuitState.OPEN:
-            if time.time() - self._last_failure_time >= self.timeout:
-                return CircuitState.HALF_OPEN
+        is_open = self._state == CircuitState.OPEN
+        timed_out = time.time() - self._last_failure_time >= self.timeout
+        if is_open and timed_out:
+            return CircuitState.HALF_OPEN
         return self._state
 
     async def record_success(self) -> None:
@@ -129,16 +131,10 @@ class CircuitBreaker:
     async def can_execute(self) -> bool:
         """Check if a request can be executed."""
         state = self.state
-        if state == CircuitState.CLOSED:
-            return True
-        if state == CircuitState.HALF_OPEN:
-            # Allow one request through
-            return True
-        return False
+        # Allow requests when CLOSED or HALF_OPEN (one test request)
+        return state in (CircuitState.CLOSED, CircuitState.HALF_OPEN)
 
-    def __call__(
-        self, func: Callable[P, T]
-    ) -> Callable[P, T]:
+    def __call__(self, func: Callable[P, T]) -> Callable[P, T]:
         """Decorator to wrap a function with circuit breaker logic."""
 
         @wraps(func)
@@ -149,19 +145,18 @@ class CircuitBreaker:
                     name=self.name,
                     state=self.state.value,
                 )
-                raise CircuitBreakerOpenError(
-                    f"Circuit breaker '{self.name}' is open"
-                )
+                raise CircuitBreakerOpenError(f"Circuit breaker '{self.name}' is open")
 
             try:
-                result = await func(*args, **kwargs)
+                awaitable = func(*args, **kwargs)
+                result = await cast(Awaitable[T], awaitable)
                 await self.record_success()
                 return result
             except Exception as e:
                 await self.record_failure(e)
                 raise
 
-        return wrapper  # type: ignore[return-value]
+        return cast(Callable[P, T], wrapper)
 
 
 class CircuitBreakerOpenError(Exception):

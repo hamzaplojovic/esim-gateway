@@ -5,7 +5,6 @@ from enum import Enum
 
 from pydantic import BaseModel
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # ENUMS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -86,7 +85,7 @@ class Transaction(BaseModel):
     completed_at: datetime | None = None
 
     # Metadata
-    metadata: dict | None = None
+    metadata: dict[str, str] | None = None
 
 
 class AccountInfo(BaseModel):

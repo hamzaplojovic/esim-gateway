@@ -5,7 +5,6 @@ from enum import Enum
 
 from pydantic import BaseModel
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # ENUMS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -103,7 +102,7 @@ class ESimHistory(BaseModel):
     event_type: str  # CREATED, INSTALLED, ENABLED, DISABLED, BUNDLE_ASSIGNED, etc.
     description: str | None = None
     bundle_name: str | None = None
-    metadata: dict | None = None
+    metadata: dict[str, str] | None = None
 
 
 # ─────────────────────────────────────────────────────────────────────────────

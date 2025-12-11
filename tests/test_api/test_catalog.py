@@ -538,12 +538,16 @@ class TestESimCardCatalog:
         )
         # Mock packages (DATA-ONLY)
         httpx_mock.add_response(
-            url=re.compile(r"https://sandbox\.esimcard\.com/api/developer/reseller/packages\?.*package_type=DATA-ONLY.*"),
+            url=re.compile(
+                r"https://sandbox\.esimcard\.com/api/developer/reseller/packages\?.*package_type=DATA-ONLY.*"
+            ),
             json=esimcard_packages,
         )
         # Mock packages (DATA-VOICE-SMS)
         httpx_mock.add_response(
-            url=re.compile(r"https://sandbox\.esimcard\.com/api/developer/reseller/packages\?.*package_type=DATA-VOICE-SMS.*"),
+            url=re.compile(
+                r"https://sandbox\.esimcard\.com/api/developer/reseller/packages\?.*package_type=DATA-VOICE-SMS.*"
+            ),
             json={"status": True, "data": []},
         )
 

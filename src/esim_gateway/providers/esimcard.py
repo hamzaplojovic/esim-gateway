@@ -112,7 +112,7 @@ class ESimCardProvider(BaseProvider):
 
     name = "esimcard"
     base_url_live = "https://esimcard.com/api"
-    base_url_sandbox = "https://esimcard.com/api"  # Same URL for both environments
+    base_url_sandbox = "https://sandbox.esimcard.com/api"
     TOKEN_TTL = 86400  # 24 hours (adjust based on actual token expiry)
 
     def __init__(
@@ -181,7 +181,7 @@ class ESimCardProvider(BaseProvider):
     async def _get_countries_raw(self) -> list[dict[str, Any]]:
         """Get raw countries data with caching."""
         if self._cache.is_valid("countries"):
-            return self._cache.get("countries")
+            return list(self._cache.get("countries"))
 
         client = await self._ensure_auth()
         response = await client.get(
@@ -191,12 +191,12 @@ class ESimCardProvider(BaseProvider):
 
         data = response.get("data", []) if isinstance(response, dict) else response
         self._cache.set("countries", data)
-        return data
+        return list(data)
 
     async def _get_regions_raw(self) -> list[dict[str, Any]]:
         """Get raw regions/continents data with caching."""
         if self._cache.is_valid("regions"):
-            return self._cache.get("regions")
+            return list(self._cache.get("regions"))
 
         client = await self._ensure_auth()
         response = await client.get(
@@ -206,12 +206,12 @@ class ESimCardProvider(BaseProvider):
 
         data = response.get("data", []) if isinstance(response, dict) else response
         self._cache.set("regions", data)
-        return data
+        return list(data)
 
     async def _get_all_packages(self) -> list[dict[str, Any]]:
         """Get all packages with caching."""
         if self._cache.is_valid("packages"):
-            return self._cache.get("packages")
+            return list(self._cache.get("packages"))
 
         client = await self._ensure_auth()
         response = await client.get(
@@ -306,7 +306,9 @@ class ESimCardProvider(BaseProvider):
             regions = await self._get_regions_raw()
             region_id = None
             for r in regions:
-                if r.get("name", "").lower() == request.region.lower() or str(r.get("id")) == request.region:
+                name_match = r.get("name", "").lower() == request.region.lower()
+                id_match = str(r.get("id")) == request.region
+                if name_match or id_match:
                     region_id = r.get("id")
                     break
 
@@ -360,18 +362,20 @@ class ESimCardProvider(BaseProvider):
         if isinstance(country_data, list):
             for c in country_data:
                 if isinstance(c, dict):
+                    iso2 = c.get("iso2") or c.get("country_iso2") or ""
+                    name = c.get("name") or c.get("country_name") or ""
                     countries.append(
                         Country(
-                            iso2=c.get("iso2", c.get("country_iso2", "")),
-                            name=c.get("name", c.get("country_name", "")),
+                            iso2=iso2,
+                            name=name,
                             image_url=c.get("flag_url", c.get("image")),
                         )
                     )
         elif pkg.get("country_iso2"):
             countries.append(
                 Country(
-                    iso2=pkg.get("country_iso2", ""),
-                    name=pkg.get("country_name", ""),
+                    iso2=pkg.get("country_iso2") or "",
+                    name=pkg.get("country_name") or "",
                 )
             )
 
@@ -482,7 +486,7 @@ class ESimCardProvider(BaseProvider):
                     package_name=item.package_name,
                     quantity=item.quantity,
                     price_per_unit=parse_price(item.price_per_unit),
-                    esims=all_esims[-item.quantity:],
+                    esims=all_esims[-item.quantity :],
                 )
             )
 
@@ -724,9 +728,7 @@ class ESimCardProvider(BaseProvider):
             total=len(bundles),
         )
 
-    async def get_bundle_status(
-        self, iccid: str, bundle_name: str
-    ) -> GetBundleStatusResponse:
+    async def get_bundle_status(self, iccid: str, bundle_name: str) -> GetBundleStatusResponse:
         """Get status of a specific bundle on an eSIM."""
         bundles_response = await self.list_esim_bundles(iccid)
 
@@ -734,9 +736,7 @@ class ESimCardProvider(BaseProvider):
             if bundle.name == bundle_name or bundle.package_id == bundle_name:
                 return GetBundleStatusResponse(iccid=iccid, bundle=bundle)
 
-        raise BundleNotFoundException(
-            f"Bundle '{bundle_name}' not found on eSIM '{iccid}'"
-        )
+        raise BundleNotFoundException(f"Bundle '{bundle_name}' not found on eSIM '{iccid}'")
 
     def _parse_esim(self, data: dict[str, Any]) -> ESim:
         """Parse esimCard eSIM data to unified ESim model."""
@@ -809,9 +809,7 @@ class ESimCardProvider(BaseProvider):
     # USAGE METHODS
     # ─────────────────────────────────────────────────────────────────────────
 
-    async def get_usage(
-        self, iccid: str, bundle_name: str | None = None
-    ) -> GetUsageResponse:
+    async def get_usage(self, iccid: str, bundle_name: str | None = None) -> GetUsageResponse:
         """Get current usage statistics for an eSIM."""
         client = await self._ensure_auth()
 
@@ -885,9 +883,7 @@ class ESimCardProvider(BaseProvider):
 
         return GetBalanceResponse(balance=balance)
 
-    async def list_transactions(
-        self, request: ListTransactionsRequest
-    ) -> ListTransactionsResponse:
+    async def list_transactions(self, request: ListTransactionsRequest) -> ListTransactionsResponse:
         """List account transactions - not supported by esimCard."""
         # esimCard doesn't have a transactions endpoint in the provided API docs
         return ListTransactionsResponse(

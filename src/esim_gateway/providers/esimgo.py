@@ -118,13 +118,14 @@ class ESimGoProvider(BaseProvider):
     async def _get_catalog(self) -> dict[str, Any]:
         """Get full catalog with caching."""
         if self._catalog_cache.is_valid():
-            return self._catalog_cache.get()
+            cached = self._catalog_cache.get()
+            return dict(cached) if cached else {}
 
         response = await self._client.get(
             "/catalogue", params={"perPage": 1000}, provider_name=self.name
         )
         self._catalog_cache.set(response)
-        return response
+        return dict(response)
 
     # ─────────────────────────────────────────────────────────────────────────
     # CATALOG
@@ -184,9 +185,7 @@ class ESimGoProvider(BaseProvider):
         if request.region:
             params["region"] = request.region
 
-        response = await self._client.get(
-            "/catalogue", params=params, provider_name=self.name
-        )
+        response = await self._client.get("/catalogue", params=params, provider_name=self.name)
         packages = [self._parse_package(b) for b in response.get("bundles", [])]
 
         return ListPackagesResponse(
@@ -251,12 +250,14 @@ class ESimGoProvider(BaseProvider):
                     )
                     for n in c.get("networks", [])
                 ]
-                countries.append(Country(
-                    iso2=inner.get("iso", ""),
-                    name=inner.get("name", ""),
-                    region=inner.get("region"),
-                    networks=networks,
-                ))
+                countries.append(
+                    Country(
+                        iso2=inner.get("iso", ""),
+                        name=inner.get("name", ""),
+                        region=inner.get("region"),
+                        networks=networks,
+                    )
+                )
             else:
                 countries.append(self._parse_country(c))
 
@@ -272,12 +273,14 @@ class ESimGoProvider(BaseProvider):
                     )
                     for n in c.get("networks", [])
                 ]
-                roaming.append(Country(
-                    iso2=inner.get("iso", ""),
-                    name=inner.get("name", ""),
-                    region=inner.get("region"),
-                    networks=networks,
-                ))
+                roaming.append(
+                    Country(
+                        iso2=inner.get("iso", ""),
+                        name=inner.get("name", ""),
+                        region=inner.get("region"),
+                        networks=networks,
+                    )
+                )
             else:
                 roaming.append(self._parse_country(c))
 
@@ -340,9 +343,9 @@ class ESimGoProvider(BaseProvider):
     def _parse_speed(self, speed: Any) -> list[str]:
         """Parse network speed from various formats."""
         if isinstance(speed, dict):
-            return speed.get("speeds", [])
+            return list(speed.get("speeds", []))
         if isinstance(speed, list):
-            return speed
+            return list(speed)
         if isinstance(speed, str) and speed:
             return [speed]
         return []
@@ -373,17 +376,13 @@ class ESimGoProvider(BaseProvider):
             "order": order_items,
         }
 
-        response = await self._client.post(
-            "/orders", json=payload, provider_name=self.name
-        )
+        response = await self._client.post("/orders", json=payload, provider_name=self.name)
         return CreateOrderResponse(order=self._parse_order(response))
 
     async def get_order(self, order_id: str) -> GetOrderResponse:
         """Get order details by reference."""
         try:
-            response = await self._client.get(
-                f"/orders/{order_id}", provider_name=self.name
-            )
+            response = await self._client.get(f"/orders/{order_id}", provider_name=self.name)
         except Exception as e:
             if "404" in str(e):
                 raise OrderNotFoundException(f"Order '{order_id}' not found") from e
@@ -405,9 +404,7 @@ class ESimGoProvider(BaseProvider):
             sep = "&" if existing else ""
             params["createdAt"] = f"{existing}{sep}lte:{request.created_before.isoformat()}"
 
-        response = await self._client.get(
-            "/orders", params=params, provider_name=self.name
-        )
+        response = await self._client.get("/orders", params=params, provider_name=self.name)
 
         orders = [self._parse_order(o) for o in response.get("orders", []) if o]
 
@@ -462,9 +459,7 @@ class ESimGoProvider(BaseProvider):
         if request.iccid:
             params["iccid"] = request.iccid
 
-        response = await self._client.get(
-            "/esims", params=params, provider_name=self.name
-        )
+        response = await self._client.get("/esims", params=params, provider_name=self.name)
 
         esims = [self._parse_esim(e) for e in response.get("esims", [])]
 
@@ -478,9 +473,7 @@ class ESimGoProvider(BaseProvider):
     async def get_esim(self, iccid: str) -> GetESimResponse:
         """Get eSIM details by ICCID."""
         try:
-            response = await self._client.get(
-                f"/esims/{iccid}", provider_name=self.name
-            )
+            response = await self._client.get(f"/esims/{iccid}", provider_name=self.name)
         except Exception as e:
             if "404" in str(e):
                 raise ESimNotFoundException(f"eSIM '{iccid}' not found") from e
@@ -494,30 +487,32 @@ class ESimGoProvider(BaseProvider):
         payload: dict[str, Any] = {
             "type": "validate" if self.sandbox else "transaction",
             "assign": True,
-            "order": [{
-                "type": "bundle",
-                "item": request.package_id,
-                "quantity": request.quantity,
-            }],
+            "order": [
+                {
+                    "type": "bundle",
+                    "item": request.package_id,
+                    "quantity": request.quantity,
+                }
+            ],
         }
 
         if request.iccid:
             payload["order"][0]["iccids"] = [request.iccid]
 
-        response = await self._client.post(
-            "/esims/apply", json=payload, provider_name=self.name
-        )
+        response = await self._client.post("/esims/apply", json=payload, provider_name=self.name)
 
         esims = []
         for item in response.get("order", []):
             for e in item.get("esims", []):
-                esims.append(ESim(
-                    iccid=e.get("iccid", ""),
-                    lpa_string=e.get("lpaString"),
-                    smdp_address=e.get("smdpAddress"),
-                    matching_id=e.get("matchingId"),
-                    status=ESimStatus.ACTIVE,
-                ))
+                esims.append(
+                    ESim(
+                        iccid=e.get("iccid", ""),
+                        lpa_string=e.get("lpaString"),
+                        smdp_address=e.get("smdpAddress"),
+                        matching_id=e.get("matchingId"),
+                        status=ESimStatus.ACTIVE,
+                    )
+                )
 
         return ApplyBundleResponse(
             success=True,
@@ -528,9 +523,7 @@ class ESimGoProvider(BaseProvider):
     async def list_esim_bundles(self, iccid: str) -> ListESimBundlesResponse:
         """List all bundles assigned to an eSIM."""
         try:
-            response = await self._client.get(
-                f"/esims/{iccid}/bundles", provider_name=self.name
-            )
+            response = await self._client.get(f"/esims/{iccid}/bundles", provider_name=self.name)
         except Exception as e:
             if "404" in str(e):
                 raise ESimNotFoundException(f"eSIM '{iccid}' not found") from e
@@ -544,9 +537,7 @@ class ESimGoProvider(BaseProvider):
             total=len(bundles),
         )
 
-    async def get_bundle_status(
-        self, iccid: str, bundle_name: str
-    ) -> GetBundleStatusResponse:
+    async def get_bundle_status(self, iccid: str, bundle_name: str) -> GetBundleStatusResponse:
         """Get status of a specific bundle on an eSIM."""
         try:
             response = await self._client.get(
@@ -590,9 +581,7 @@ class ESimGoProvider(BaseProvider):
     async def get_esim_history(self, iccid: str) -> GetESimHistoryResponse:
         """Get eSIM lifecycle history."""
         try:
-            response = await self._client.get(
-                f"/esims/{iccid}/history", provider_name=self.name
-            )
+            response = await self._client.get(f"/esims/{iccid}/history", provider_name=self.name)
         except Exception as e:
             if "404" in str(e):
                 raise ESimNotFoundException(f"eSIM '{iccid}' not found") from e
@@ -645,6 +634,7 @@ class ESimGoProvider(BaseProvider):
     def _parse_history(self, data: dict[str, Any]) -> ESimHistory:
         """Parse eSIM history event."""
         from datetime import datetime as dt
+
         return ESimHistory(
             timestamp=parse_datetime(data.get("date")) or dt.now(),
             event_type=data.get("type", "UNKNOWN"),
@@ -657,9 +647,7 @@ class ESimGoProvider(BaseProvider):
     # USAGE
     # ─────────────────────────────────────────────────────────────────────────
 
-    async def get_usage(
-        self, iccid: str, bundle_name: str | None = None
-    ) -> GetUsageResponse:
+    async def get_usage(self, iccid: str, bundle_name: str | None = None) -> GetUsageResponse:
         """Get usage statistics for an eSIM (aggregated from bundles)."""
         bundles_response = await self.list_esim_bundles(iccid)
 
@@ -716,9 +704,7 @@ class ESimGoProvider(BaseProvider):
             )
         )
 
-    async def list_transactions(
-        self, request: ListTransactionsRequest
-    ) -> ListTransactionsResponse:
+    async def list_transactions(self, request: ListTransactionsRequest) -> ListTransactionsResponse:
         """List transactions - eSIM Go doesn't have direct transaction API."""
         return ListTransactionsResponse(
             transactions=[],
@@ -755,15 +741,11 @@ class ESimGoProvider(BaseProvider):
     # INVENTORY
     # ─────────────────────────────────────────────────────────────────────────
 
-    async def list_inventory(
-        self, request: ListInventoryRequest
-    ) -> ListInventoryResponse:
+    async def list_inventory(self, request: ListInventoryRequest) -> ListInventoryResponse:
         """List bundle inventory."""
         params: dict[str, Any] = {"page": request.page, "perPage": request.limit}
 
-        response = await self._client.get(
-            "/inventory", params=params, provider_name=self.name
-        )
+        response = await self._client.get("/inventory", params=params, provider_name=self.name)
 
         items = [
             InventoryItem(
@@ -795,9 +777,7 @@ class ESimGoProvider(BaseProvider):
 
     async def list_bundle_groups(self) -> ListBundleGroupsResponse:
         """List bundle groups from organisation."""
-        response = await self._client.get(
-            "/organisation/groups", provider_name=self.name
-        )
+        response = await self._client.get("/organisation/groups", provider_name=self.name)
 
         groups = [
             BundleGroup(
@@ -814,9 +794,7 @@ class ESimGoProvider(BaseProvider):
 
         return ListBundleGroupsResponse(groups=groups, total=len(groups))
 
-    async def list_assignments(
-        self, request: ListAssignmentsRequest
-    ) -> ListAssignmentsResponse:
+    async def list_assignments(self, request: ListAssignmentsRequest) -> ListAssignmentsResponse:
         """List eSIM assignments with installation details."""
         params: dict[str, Any] = {"page": request.page, "perPage": request.limit}
         if request.order_id:

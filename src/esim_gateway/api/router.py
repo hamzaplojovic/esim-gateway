@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
-from esim_gateway.api.catalog import router as catalog_router
-from esim_gateway.api.orders import router as orders_router
-from esim_gateway.api.esims import router as esims_router
 from esim_gateway.api.account import router as account_router
+from esim_gateway.api.catalog import router as catalog_router
+from esim_gateway.api.esims import router as esims_router
+from esim_gateway.api.orders import router as orders_router
 
 api_router = APIRouter()
 

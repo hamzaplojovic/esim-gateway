@@ -6,6 +6,7 @@ from esim_gateway.api.dependencies import get_provider
 from esim_gateway.models.esim import (
     ApplyBundleRequest,
     ApplyBundleResponse,
+    ESimStatus,
     GetBundleStatusResponse,
     GetESimHistoryResponse,
     GetESimResponse,
@@ -25,7 +26,7 @@ router = APIRouter(prefix="/esims", tags=["esims"])
 async def list_esims(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
-    status: str | None = Query(None, description="Filter by eSIM status"),
+    status: ESimStatus | None = Query(None, description="Filter by eSIM status"),
     iccid: str | None = Query(None, description="Search by ICCID"),
     order_id: str | None = Query(None, description="Filter by order ID"),
     provider: BaseProvider = Depends(get_provider),

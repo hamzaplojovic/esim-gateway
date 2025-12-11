@@ -176,29 +176,29 @@ class ZetexaProvider(BaseProvider):
     async def _get_countries(self) -> list[Any]:
         """Get countries with caching."""
         if self._cache.is_valid("countries"):
-            return self._cache.get("countries")
+            return list(self._cache.get("countries"))
 
         client = await self._ensure_auth()
         response = await client.get("/v2/Countries-List", provider_name=self.name)
         data = response if isinstance(response, list) else response.get("data", [])
         self._cache.set("countries", data)
-        return data
+        return list(data)
 
     async def _get_regions(self) -> list[Any]:
         """Get regions with caching."""
         if self._cache.is_valid("regions"):
-            return self._cache.get("regions")
+            return list(self._cache.get("regions"))
 
         client = await self._ensure_auth()
         response = await client.get("/v2/Regions-List", provider_name=self.name)
         data = response if isinstance(response, list) else response.get("data", [])
         self._cache.set("regions", data)
-        return data
+        return list(data)
 
     async def _get_all_packages(self) -> list[Any]:
         """Get all packages (by region) with caching."""
         if self._cache.is_valid("packages"):
-            return self._cache.get("packages")
+            return list(self._cache.get("packages"))
 
         regions = await self._get_regions()
         client = await self._ensure_auth()
@@ -273,9 +273,7 @@ class ZetexaProvider(BaseProvider):
                 params["filterby"] = "Region"
                 params["region_name"] = request.region
 
-            response = await client.get(
-                "/v2/Packages-List", params=params, provider_name=self.name
-            )
+            response = await client.get("/v2/Packages-List", params=params, provider_name=self.name)
             data = response if isinstance(response, list) else response.get("data", [])
         else:
             data = await self._get_all_packages()
@@ -305,9 +303,7 @@ class ZetexaProvider(BaseProvider):
 
         raise PackageNotFoundException(f"Package '{package_id}' not found")
 
-    def _parse_package(
-        self, pkg: dict[str, Any], lookup: dict[str, dict[str, Any]]
-    ) -> Package:
+    def _parse_package(self, pkg: dict[str, Any], lookup: dict[str, dict[str, Any]]) -> Package:
         """Parse package with country enrichment."""
         # Parse countries with enrichment
         countries = []
@@ -398,9 +394,7 @@ class ZetexaProvider(BaseProvider):
             if request.iccids:
                 payload["iccid"] = request.iccids[0]
 
-            response = await client.post(
-                "/v2/Create-Order", json=payload, provider_name=self.name
-            )
+            response = await client.post("/v2/Create-Order", json=payload, provider_name=self.name)
 
             if not response.get("success"):
                 raise ProviderException(
@@ -441,9 +435,7 @@ class ZetexaProvider(BaseProvider):
             "page_size": request.limit,
         }
 
-        response = await client.get(
-            "/v1/Orders-List", params=params, provider_name=self.name
-        )
+        response = await client.get("/v1/Orders-List", params=params, provider_name=self.name)
 
         if not response.get("success", True):
             return ListOrdersResponse(
@@ -465,11 +457,10 @@ class ZetexaProvider(BaseProvider):
 
     def _parse_zetexa_order(self, data: dict[str, Any] | list[Any]) -> Order:
         """Parse order from Zetexa create response."""
-        if isinstance(data, list):
-            data = data[0]
+        order_data: dict[str, Any] = data[0] if isinstance(data, list) else data
 
         items = []
-        for sim in data.get("sims", []):
+        for sim in order_data.get("sims", []):
             lpa = sim.get("lpa_server", "")
             esim = ESimActivation(
                 iccid=sim.get("iccid", ""),
@@ -488,12 +479,12 @@ class ZetexaProvider(BaseProvider):
             )
 
         return Order(
-            order_id=data.get("order_id", ""),
-            status=data.get("status", "unknown"),
+            order_id=order_data.get("order_id", ""),
+            status=order_data.get("status", "unknown"),
             items=items,
-            total=parse_price(data.get("total")) or 0.0,
+            total=parse_price(order_data.get("total")) or 0.0,
             currency="USD",
-            assigned=data.get("status") == "Completed",
+            assigned=order_data.get("status") == "Completed",
         )
 
     def _parse_qrcode_response(self, order_id: str, data: dict[str, Any]) -> Order:
@@ -550,9 +541,7 @@ class ZetexaProvider(BaseProvider):
         if request.order_id:
             params["order_id"] = request.order_id
 
-        response = await client.get(
-            "/v1/Orders-List", params=params, provider_name=self.name
-        )
+        response = await client.get("/v1/Orders-List", params=params, provider_name=self.name)
 
         if not response.get("success", True):
             return ListESimsResponse(
@@ -572,9 +561,9 @@ class ZetexaProvider(BaseProvider):
                     ESim(
                         iccid=iccid,
                         status=self._map_esim_status(order.get("order_status", "")),
-                        provider_esim_id=order.get("order_id"),
+                        order_id=order.get("order_id"),
                         created_at=parse_datetime(order.get("created_on")),
-                        assigned_bundles=[],
+                        bundles=[],
                     )
                 )
 
@@ -612,12 +601,7 @@ class ZetexaProvider(BaseProvider):
         if request.iccid:
             payload["iccid"] = request.iccid
 
-        if request.email:
-            payload["email"] = request.email
-
-        response = await client.post(
-            "/v2/Create-Order", json=payload, provider_name=self.name
-        )
+        response = await client.post("/v2/Create-Order", json=payload, provider_name=self.name)
 
         if not response.get("success"):
             raise ProviderException(
@@ -634,7 +618,7 @@ class ZetexaProvider(BaseProvider):
                 lpa_string=sim.get("lpa_server"),
                 smdp_address=sim.get("smdpAddress"),
                 matching_id=sim.get("matchingID"),
-                assigned_bundles=[],
+                bundles=[],
             )
             esims.append(esim)
 
@@ -655,27 +639,26 @@ class ZetexaProvider(BaseProvider):
         )
 
         if not response.get("success", True):
-            return ListESimBundlesResponse(bundles=[], iccid=iccid)
+            return ListESimBundlesResponse(bundles=[], iccid=iccid, total=0)
 
         bundles: list[AssignedBundle] = []
         usage_data = response.get("data", {})
 
         if usage_data:
+            total_data = usage_data.get("total_data_mb")
             bundle = AssignedBundle(
                 name=usage_data.get("package_name", "Unknown"),
                 package_id=usage_data.get("package_id", ""),
                 status=self._map_bundle_status(usage_data),
-                initial_data_mb=usage_data.get("total_data_mb"),
+                data_total_mb=total_data,
                 data_remaining_mb=usage_data.get("remaining_data_mb"),
-                is_unlimited=usage_data.get("total_data_mb") == 0,
+                is_unlimited=total_data == 0,
             )
             bundles.append(bundle)
 
-        return ListESimBundlesResponse(bundles=bundles, iccid=iccid)
+        return ListESimBundlesResponse(bundles=bundles, iccid=iccid, total=len(bundles))
 
-    async def get_bundle_status(
-        self, iccid: str, bundle_name: str
-    ) -> GetBundleStatusResponse:
+    async def get_bundle_status(self, iccid: str, bundle_name: str) -> GetBundleStatusResponse:
         """Get status of a specific bundle on an eSIM."""
         bundles_response = await self.list_esim_bundles(iccid)
 
@@ -696,9 +679,7 @@ class ZetexaProvider(BaseProvider):
     # USAGE METHODS
     # ─────────────────────────────────────────────────────────────────────────
 
-    async def get_usage(
-        self, iccid: str, bundle_name: str | None = None
-    ) -> GetUsageResponse:
+    async def get_usage(self, iccid: str, bundle_name: str | None = None) -> GetUsageResponse:
         """Get current usage statistics for an eSIM."""
         client = await self._ensure_auth()
 
@@ -760,9 +741,7 @@ class ZetexaProvider(BaseProvider):
 
         return GetBalanceResponse(balance=balance)
 
-    async def list_transactions(
-        self, request: ListTransactionsRequest
-    ) -> ListTransactionsResponse:
+    async def list_transactions(self, request: ListTransactionsRequest) -> ListTransactionsResponse:
         """List account transactions."""
         client = await self._ensure_auth()
 
@@ -776,9 +755,7 @@ class ZetexaProvider(BaseProvider):
         if request.end_date:
             params["end_date"] = request.end_date.strftime("%Y-%m-%d")
 
-        response = await client.get(
-            "/v1/Transactions-List", params=params, provider_name=self.name
-        )
+        response = await client.get("/v1/Transactions-List", params=params, provider_name=self.name)
 
         if not response.get("success", True):
             return ListTransactionsResponse(
@@ -814,9 +791,7 @@ class ZetexaProvider(BaseProvider):
         if request.reason:
             payload["reason"] = request.reason
 
-        response = await client.post(
-            "/v1/Plan-Refund", json=payload, provider_name=self.name
-        )
+        response = await client.post("/v1/Plan-Refund", json=payload, provider_name=self.name)
 
         success = response.get("success", False)
 
@@ -852,7 +827,7 @@ class ZetexaProvider(BaseProvider):
             lpa_string=data.get("lpa_server"),
             smdp_address=data.get("smdpAddress"),
             matching_id=data.get("matchingID"),
-            assigned_bundles=bundles,
+            bundles=bundles,
         )
 
     def _map_esim_status(self, status: str) -> ESimStatus:

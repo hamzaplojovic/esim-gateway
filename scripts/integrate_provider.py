@@ -25,8 +25,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from string import Template
-
 
 PROJECT_ROOT = Path(__file__).parent.parent
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
@@ -44,6 +42,7 @@ def load_openapi_spec(file_path: Path) -> dict:
         if file_path.suffix in (".yaml", ".yml"):
             try:
                 import yaml
+
                 return yaml.safe_load(f)
             except ImportError:
                 print("Error: PyYAML required for YAML files. Install with: pip install pyyaml")
@@ -115,9 +114,13 @@ def create_scaffold(provider_name: str, display_name: str) -> None:
         if response.lower() != "y":
             print("Skipping provider file...")
         else:
-            _create_provider_file(provider_template, provider_output, provider_name, class_name, display_name)
+            _create_provider_file(
+                provider_template, provider_output, provider_name, class_name, display_name
+            )
     else:
-        _create_provider_file(provider_template, provider_output, provider_name, class_name, display_name)
+        _create_provider_file(
+            provider_template, provider_output, provider_name, class_name, display_name
+        )
 
     # Create mapping file from template
     mapping_template = TEMPLATES_DIR / "provider_mapping.yaml"
@@ -224,20 +227,34 @@ def _create_provider_file(
 
     # Replace endpoint placeholders with "Not documented"
     content = content.replace("${ENDPOINT_MAPPING}", "See mapping YAML for details")
-    content = content.replace("${ENDPOINT_LIST_COUNTRIES}", "GET /countries (provider endpoint TBD)")
+    content = content.replace(
+        "${ENDPOINT_LIST_COUNTRIES}", "GET /countries (provider endpoint TBD)"
+    )
     content = content.replace("${ENDPOINT_LIST_REGIONS}", "GET /regions (provider endpoint TBD)")
     content = content.replace("${ENDPOINT_LIST_PACKAGES}", "GET /packages (provider endpoint TBD)")
-    content = content.replace("${ENDPOINT_GET_PACKAGE}", "GET /packages/{id} (provider endpoint TBD)")
+    content = content.replace(
+        "${ENDPOINT_GET_PACKAGE}", "GET /packages/{id} (provider endpoint TBD)"
+    )
     content = content.replace("${ENDPOINT_CREATE_ORDER}", "POST /orders (provider endpoint TBD)")
     content = content.replace("${ENDPOINT_GET_ORDER}", "GET /orders/{id} (provider endpoint TBD)")
     content = content.replace("${ENDPOINT_LIST_ORDERS}", "GET /orders (provider endpoint TBD)")
     content = content.replace("${ENDPOINT_LIST_ESIMS}", "GET /esims (provider endpoint TBD)")
     content = content.replace("${ENDPOINT_GET_ESIM}", "GET /esims/{iccid} (provider endpoint TBD)")
-    content = content.replace("${ENDPOINT_APPLY_BUNDLE}", "POST /esims/{iccid}/apply (provider endpoint TBD)")
-    content = content.replace("${ENDPOINT_LIST_ESIM_BUNDLES}", "GET /esims/{iccid}/bundles (provider endpoint TBD)")
-    content = content.replace("${ENDPOINT_GET_BUNDLE_STATUS}", "GET /esims/{iccid}/bundles/{name} (provider endpoint TBD)")
-    content = content.replace("${ENDPOINT_GET_USAGE}", "GET /esims/{iccid}/usage (provider endpoint TBD)")
-    content = content.replace("${ENDPOINT_GET_BALANCE}", "GET /account/balance (provider endpoint TBD)")
+    content = content.replace(
+        "${ENDPOINT_APPLY_BUNDLE}", "POST /esims/{iccid}/apply (provider endpoint TBD)"
+    )
+    content = content.replace(
+        "${ENDPOINT_LIST_ESIM_BUNDLES}", "GET /esims/{iccid}/bundles (provider endpoint TBD)"
+    )
+    content = content.replace(
+        "${ENDPOINT_GET_BUNDLE_STATUS}", "GET /esims/{iccid}/bundles/{name} (provider endpoint TBD)"
+    )
+    content = content.replace(
+        "${ENDPOINT_GET_USAGE}", "GET /esims/{iccid}/usage (provider endpoint TBD)"
+    )
+    content = content.replace(
+        "${ENDPOINT_GET_BALANCE}", "GET /account/balance (provider endpoint TBD)"
+    )
 
     output_path.write_text(content)
     print(f"Created: {output_path}")

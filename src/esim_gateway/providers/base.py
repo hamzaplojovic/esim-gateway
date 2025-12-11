@@ -226,9 +226,7 @@ class BaseProvider(ABC):
     # USAGE & STATISTICS - Optional
     # ─────────────────────────────────────────────────────────────────────────
 
-    async def get_usage_history(
-        self, request: GetUsageHistoryRequest
-    ) -> GetUsageHistoryResponse:
+    async def get_usage_history(self, request: GetUsageHistoryRequest) -> GetUsageHistoryResponse:
         """Get historical usage records.
 
         Optional - detailed usage history over time.
@@ -257,9 +255,7 @@ class BaseProvider(ABC):
     # ACCOUNT & WALLET - Optional
     # ─────────────────────────────────────────────────────────────────────────
 
-    async def list_transactions(
-        self, request: ListTransactionsRequest
-    ) -> ListTransactionsResponse:
+    async def list_transactions(self, request: ListTransactionsRequest) -> ListTransactionsResponse:
         """List account transactions.
 
         Optional - transaction history may not be available from all providers.
@@ -312,9 +308,7 @@ class BaseProvider(ABC):
         """
         raise ProviderNotSupportedError(self.name, "list_bundle_groups")
 
-    async def list_assignments(
-        self, request: ListAssignmentsRequest
-    ) -> ListAssignmentsResponse:
+    async def list_assignments(self, request: ListAssignmentsRequest) -> ListAssignmentsResponse:
         """List eSIM assignment/installation details.
 
         Optional - provides QR codes and installation info.
@@ -347,6 +341,7 @@ class BaseProvider(ABC):
         # Check if it's the default implementation that raises NotSupported
         try:
             import inspect
+
             source = inspect.getsource(method)
             return "ProviderNotSupportedError" not in source
         except (TypeError, OSError):

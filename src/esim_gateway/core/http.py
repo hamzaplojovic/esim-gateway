@@ -14,7 +14,6 @@ from esim_gateway.core.exceptions import ProviderException
 from esim_gateway.core.logging import get_logger
 from esim_gateway.core.resilience import (
     RETRYABLE_EXCEPTIONS,
-    CircuitBreakerOpenError,
     get_circuit_breaker,
 )
 
@@ -24,10 +23,7 @@ logger = get_logger(__name__)
 def _sanitize_headers(headers: dict[str, str]) -> dict[str, str]:
     """Redact sensitive header values for logging."""
     sensitive = {"authorization", "x-api-key", "accesstoken"}
-    return {
-        k: "***" if k.lower() in sensitive else v
-        for k, v in headers.items()
-    }
+    return {k: "***" if k.lower() in sensitive else v for k, v in headers.items()}
 
 
 class HTTPClient:
@@ -94,9 +90,9 @@ class HTTPClient:
                     url=url,
                 )
                 raise ProviderException(
-                    message=f"Service temporarily unavailable (circuit breaker open)",
+                    message="Service temporarily unavailable (circuit breaker open)",
                     provider=provider_name,
-                    error_code="circuit_breaker_open",
+                    provider_code="circuit_breaker_open",
                 )
 
         # Log outgoing request
@@ -143,7 +139,7 @@ class HTTPClient:
         try:
             response = await _do_request()
             elapsed_ms = (time.perf_counter() - start_time) * 1000
-            response_body = response.json()
+            response_body: dict[str, Any] = response.json()
 
             # Log response
             logger.info(
@@ -242,6 +238,23 @@ class HTTPClient:
             "POST",
             path,
             json=json,
+            params=params,
+            headers=headers,
+            provider_name=provider_name,
+        )
+
+    async def delete(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        provider_name: str = "unknown",
+    ) -> dict[str, Any]:
+        """Make a DELETE request."""
+        return await self.request(
+            "DELETE",
+            path,
             params=params,
             headers=headers,
             provider_name=provider_name,

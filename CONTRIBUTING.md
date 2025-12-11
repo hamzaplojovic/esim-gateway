@@ -1,257 +1,258 @@
 # Contributing to eSIM Gateway
 
-Thank you for your interest in contributing to the eSIM Gateway! This guide will help you add new provider integrations.
+Thank you for your interest in contributing to the eSIM Gateway! This guide will help you get started with development and adding new provider integrations.
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Architecture](#architecture)
+- [Getting Started](#getting-started)
+- [Development Setup](#development-setup)
+- [Code Style](#code-style)
+- [Architecture Overview](#architecture-overview)
 - [Adding a New Provider](#adding-a-new-provider)
-- [Step-by-Step Guide](#step-by-step-guide)
 - [Testing](#testing)
-- [Submitting Your PR](#submitting-your-pr)
+- [Submitting Changes](#submitting-changes)
 
 ---
 
-## Overview
+## Getting Started
 
-The eSIM Gateway provides a **unified API** that abstracts multiple eSIM provider APIs. Each provider implementation maps provider-specific endpoints and data formats to our unified schema.
+### Prerequisites
 
+- Python 3.13+
+- [uv](https://docs.astral.sh/uv/) (recommended package manager)
+- Git
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/hamzaplojovic/esim-gateway.git
+cd esim-gateway
+
+# Install dependencies (including dev dependencies)
+uv sync --dev
+
+# Copy environment template
+cp .env.example .env
+
+# Verify setup
+uv run pytest
+uv run ruff check .
+uv run mypy src/
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Unified Gateway API                       │
-│  /countries, /packages, /orders, /esims, /account, etc.     │
-└─────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
-   ┌─────────┐          ┌─────────┐          ┌─────────┐
-   │ eSIM Go │          │ Zetexa  │          │  Your   │
-   │Provider │          │Provider │          │Provider │
-   └─────────┘          └─────────┘          └─────────┘
-        │                     │                     │
-        ▼                     ▼                     ▼
-   Provider API          Provider API          Provider API
+
+---
+
+## Code Style
+
+We use automated tools to maintain consistent code quality:
+
+### Linting & Formatting
+
+```bash
+# Check for issues
+uv run ruff check .
+
+# Auto-fix issues
+uv run ruff check --fix .
+
+# Format code
+uv run ruff format .
+
+# Type checking
+uv run mypy src/
 ```
 
-## Architecture
+### Guidelines
 
-### Key Concepts
+- **Type hints**: All functions must have complete type annotations
+- **Docstrings**: Public functions and classes need docstrings
+- **Line length**: 100 characters max
+- **Imports**: Sorted automatically by ruff (isort rules)
 
-1. **Unified Schema**: All providers map to the same response models
-2. **BaseProvider**: Abstract base class that all providers must extend
-3. **HTTPClient**: Shared HTTP client with retry logic and error handling
-4. **Models**: Pydantic models define the unified API contracts
+### Pre-commit Checks
 
-### Directory Structure
+Before committing, ensure all checks pass:
+
+```bash
+uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest
+```
+
+---
+
+## Architecture Overview
+
+### Project Structure
 
 ```
 src/esim_gateway/
-├── providers/
-│   ├── base.py          # BaseProvider abstract class
-│   ├── esimgo.py        # eSIM Go implementation
-│   ├── zetexa.py        # Zetexa implementation
-│   └── your_provider.py # Your new provider
-├── models/
-│   ├── catalog.py       # Country, Region, Package models
-│   ├── order.py         # Order models
-│   ├── esim.py          # eSIM models
-│   ├── usage.py         # Usage models
-│   └── account.py       # Account/balance models
-├── core/
-│   ├── http.py          # HTTPClient
-│   └── exceptions.py    # Exception classes
-└── api/
-    └── dependencies.py  # Provider registration
+├── api/                 # FastAPI route handlers
+│   ├── catalog.py       # /catalog endpoints
+│   ├── orders.py        # /orders endpoints
+│   ├── esims.py         # /esims endpoints
+│   ├── account.py       # /account endpoints
+│   └── dependencies.py  # Provider injection
+├── core/                # Core utilities
+│   ├── http.py          # HTTP client with resilience
+│   ├── resilience.py    # Retry & circuit breaker
+│   ├── security.py      # Auth & rate limiting
+│   └── exceptions.py    # Custom exceptions
+├── models/              # Pydantic response models
+│   ├── catalog.py       # Country, Package, Region
+│   ├── order.py         # Order, OrderItem
+│   ├── esim.py          # ESim, Bundle
+│   ├── usage.py         # Usage statistics
+│   └── account.py       # Balance, Transaction
+├── providers/           # Provider implementations
+│   ├── base.py          # Abstract base class
+│   ├── esimgo.py        # eSIM Go
+│   ├── zetexa.py        # Zetexa
+│   ├── esimcard.py      # esimCard
+│   └── registry.py      # Provider factory
+└── config.py            # Settings
 ```
+
+### Key Concepts
+
+1. **Unified Schema**: All providers return the same Pydantic models
+2. **BaseProvider**: Abstract class defining the provider interface
+3. **HTTPClient**: Shared HTTP client with retry/circuit breaker
+4. **Provider Registry**: Factory for creating provider instances
 
 ---
 
 ## Adding a New Provider
 
-### Prerequisites
+### Step 1: Document the API Mapping
 
-Before you start:
+Create `docs/providers/YOUR_PROVIDER_mapping.yaml`:
 
-1. **Get API access** from the provider (sandbox/test credentials)
-2. **Obtain API documentation** (ideally OpenAPI/Swagger spec)
-3. **Understand the provider's** authentication method, endpoints, and data formats
+```yaml
+provider:
+  name: yourprovider
+  website: https://yourprovider.com
+  api_docs: https://docs.yourprovider.com
 
-### Required Methods
+authentication:
+  type: bearer_token  # or api_key, basic_auth, oauth2
+  header: Authorization
+  format: "Bearer {token}"
 
-Your provider must implement these methods from `BaseProvider`:
+base_urls:
+  production: https://api.yourprovider.com/v1
+  sandbox: https://sandbox.yourprovider.com/v1
 
-| Category | Method | Description |
-|----------|--------|-------------|
-| **Catalog** | `list_countries()` | List available countries |
-| | `list_regions()` | List available regions |
-| | `list_packages(request)` | List packages with filters |
-| | `get_package(package_id)` | Get single package details |
-| **Orders** | `create_order(request)` | Create a new order |
-| | `get_order(order_id)` | Get order details |
-| | `list_orders(request)` | List orders with pagination |
-| **eSIM** | `list_esims(request)` | List eSIMs |
-| | `get_esim(iccid)` | Get eSIM by ICCID |
-| | `apply_bundle(request)` | Apply bundle to eSIM |
-| | `list_esim_bundles(iccid)` | List bundles on eSIM |
-| | `get_bundle_status(iccid, name)` | Get bundle status |
-| **Usage** | `get_usage(iccid, bundle_name)` | Get usage statistics |
-| **Account** | `get_balance()` | Get account balance |
+endpoints:
+  list_countries:
+    method: GET
+    path: /destinations
+    response_mapping:
+      countries: data.countries
+      iso2: country_code
+      name: country_name
+  # ... document all endpoint mappings
+```
 
-### Optional Methods
+### Step 2: Create the Provider Class
 
-These can raise `NotImplementedError` if not supported:
-
-- `list_transactions(request)` - Transaction history
-- `request_refund(request)` - Process refunds
-- `revoke_bundle(iccid, name)` - Revoke a bundle
-- `get_esim_history(iccid)` - eSIM history
-
----
-
-## Step-by-Step Guide
-
-### Step 1: Document the Mapping
-
-Before writing code, document how the provider's API maps to our unified schema.
-
-1. Copy the mapping template:
-   ```bash
-   cp templates/provider_mapping.yaml docs/providers/YOUR_PROVIDER_mapping.yaml
-   ```
-
-2. Fill in all sections:
-   - Provider info (name, website, API docs URL)
-   - Authentication details
-   - Base URLs (production and sandbox)
-   - Endpoint mappings for each unified endpoint
-   - Response field mappings
-   - Status value mappings
-   - Error code mappings
-
-This document becomes your implementation guide.
-
-### Step 2: Create the Provider File
-
-1. Copy the provider template:
-   ```bash
-   cp templates/provider.py.template src/esim_gateway/providers/YOUR_PROVIDER.py
-   ```
-
-2. Update placeholders:
-   - `${PROVIDER_NAME}` → `yourprovider` (lowercase)
-   - `${PROVIDER_NAME_TITLE}` → `YourProvider`
-   - `${PROVIDER_CLASS_NAME}` → `YourProvider`
-   - `${BASE_URL_LIVE}` → Production API URL
-   - `${BASE_URL_SANDBOX}` → Sandbox API URL
-
-### Step 3: Implement Authentication
-
-Configure the HTTP client with proper authentication in `__init__`:
+Create `src/esim_gateway/providers/yourprovider.py`:
 
 ```python
-# API Key in header
-self._client = HTTPClient(
-    base_url=self.base_url,
-    headers={
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    },
+"""YourProvider implementation."""
+
+from typing import Any
+
+from esim_gateway.core.http import HTTPClient
+from esim_gateway.core.exceptions import PackageNotFoundException
+from esim_gateway.models.catalog import (
+    Country,
+    ListCountriesResponse,
+    ListPackagesRequest,
+    ListPackagesResponse,
+    # ... other imports
 )
+from esim_gateway.providers.base import BaseProvider
 
-# Or Basic Auth
-import base64
-credentials = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
-self._client = HTTPClient(
-    base_url=self.base_url,
-    headers={
-        "Authorization": f"Basic {credentials}",
-        "Content-Type": "application/json",
-    },
-)
+
+class YourProviderProvider(BaseProvider):
+    """YourProvider eSIM provider implementation."""
+
+    name = "yourprovider"
+    base_url_live = "https://api.yourprovider.com/v1"
+    base_url_sandbox = "https://sandbox.yourprovider.com/v1"
+
+    def __init__(self, api_key: str, sandbox: bool = False):
+        super().__init__(api_key, sandbox)
+        self.base_url = self.base_url_sandbox if sandbox else self.base_url_live
+        self._client = HTTPClient(
+            base_url=self.base_url,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+        )
+
+    async def list_countries(self) -> ListCountriesResponse:
+        """List all countries with available packages."""
+        response = await self._client.get("/destinations", provider_name=self.name)
+
+        countries = [
+            Country(
+                iso2=item["country_code"],
+                name=item["country_name"],
+                image_url=item.get("flag_url"),
+            )
+            for item in response.get("data", [])
+        ]
+
+        return ListCountriesResponse(countries=countries, total=len(countries))
+
+    # Implement all other required methods...
 ```
 
-### Step 4: Implement Methods
+### Step 3: Add Status Mappings
 
-For each method:
-
-1. **Make API call** using `self._client.get()` or `self._client.post()`
-2. **Parse response** using helper methods
-3. **Map to unified models** following the schema
-
-Example implementation:
+Map provider-specific statuses to unified enums:
 
 ```python
-async def list_countries(self) -> ListCountriesResponse:
-    """List all countries with available packages."""
-    response = await self._client.get("/destinations", provider_name=self.name)
+from esim_gateway.models.esim import ESimStatus, BundleStatus
 
-    countries = []
-    for item in response.get("data", []):
-        countries.append(Country(
-            iso2=item["country_code"],
-            iso3=item.get("country_iso3"),
-            name=item["country_name"],
-            image_url=item.get("flag_url"),
-        ))
+ESIM_STATUS_MAP: dict[str, ESimStatus] = {
+    "ACTIVE": ESimStatus.ACTIVE,
+    "NOT_INSTALLED": ESimStatus.UNUSED,
+    "INSTALLED": ESimStatus.INSTALLED,
+    "SUSPENDED": ESimStatus.DISABLED,
+    "DELETED": ESimStatus.DELETED,
+}
 
-    return ListCountriesResponse(countries=countries)
+def _map_status(self, status: str) -> ESimStatus:
+    return ESIM_STATUS_MAP.get(status.upper(), ESimStatus.UNUSED)
 ```
 
-### Step 5: Map Status Values
+### Step 4: Register the Provider
 
-Create mapping dictionaries for provider-specific statuses:
-
-```python
-def _map_esim_status(self, status: str) -> ESimStatus:
-    """Map provider eSIM status to unified status."""
-    status_map = {
-        "ACTIVE": ESimStatus.ACTIVE,
-        "NOT_INSTALLED": ESimStatus.UNUSED,
-        "INSTALLED": ESimStatus.INSTALLED,
-        "SUSPENDED": ESimStatus.DISABLED,
-    }
-    return status_map.get(status.upper(), ESimStatus.UNUSED)
-```
-
-### Step 6: Handle Errors
-
-Map provider errors to appropriate exceptions:
+Update `src/esim_gateway/providers/registry.py`:
 
 ```python
-from esim_gateway.core.exceptions import (
-    PackageNotFoundException,
-    ESimNotFoundException,
-    OrderNotFoundException,
-    ProviderException,
-)
+elif provider_name == "yourprovider":
+    from esim_gateway.providers.yourprovider import YourProviderProvider
 
-# In your method:
-if response.get("error_code") == "PACKAGE_NOT_FOUND":
-    raise PackageNotFoundException(f"Package {package_id} not found")
-```
-
-### Step 7: Register the Provider
-
-Add to `src/esim_gateway/api/dependencies.py`:
-
-```python
-from esim_gateway.providers.yourprovider import YourProviderProvider
-
-PROVIDERS = {
-    "esimgo": lambda: ESimGoProvider(...),
-    "zetexa": lambda: ZetexaProvider(...),
-    "yourprovider": lambda: YourProviderProvider(
+    instance = YourProviderProvider(
         api_key=settings.yourprovider_api_key,
         sandbox=settings.yourprovider_sandbox,
-    ),
-}
+    )
 ```
 
-### Step 8: Add Settings
+Update `get_available_providers()`:
 
-Add to `src/esim_gateway/core/settings.py`:
+```python
+def get_available_providers() -> list[str]:
+    return ["esimgo", "zetexa", "esimcard", "yourprovider"]
+```
+
+### Step 5: Add Configuration
+
+Update `src/esim_gateway/config.py`:
 
 ```python
 class Settings(BaseSettings):
@@ -261,6 +262,41 @@ class Settings(BaseSettings):
     yourprovider_api_key: str = ""
     yourprovider_sandbox: bool = True
 ```
+
+Update `.env.example`:
+
+```bash
+# YourProvider
+YOURPROVIDER_API_KEY=
+YOURPROVIDER_SANDBOX=true
+```
+
+### Required Methods
+
+Your provider must implement all methods from `BaseProvider`:
+
+| Category | Method | Description |
+|----------|--------|-------------|
+| **Catalog** | `list_countries()` | List available countries |
+| | `list_regions()` | List available regions |
+| | `list_packages(request)` | List packages with filters |
+| | `get_package(package_id)` | Get single package |
+| **Orders** | `create_order(request)` | Create new order |
+| | `get_order(order_id)` | Get order details |
+| | `list_orders(request)` | List orders |
+| **eSIM** | `list_esims(request)` | List eSIMs |
+| | `get_esim(iccid)` | Get eSIM by ICCID |
+| | `apply_bundle(request)` | Apply bundle to eSIM |
+| | `list_esim_bundles(iccid)` | List bundles on eSIM |
+| | `get_bundle_status(iccid, name)` | Get bundle status |
+| **Usage** | `get_usage(iccid, bundle_name)` | Get usage stats |
+| **Account** | `get_balance()` | Get account balance |
+
+Optional methods (can raise `NotImplementedError`):
+- `list_transactions(request)`
+- `request_refund(request)`
+- `revoke_bundle(iccid, name, request)`
+- `get_esim_history(iccid)`
 
 ---
 
@@ -273,30 +309,54 @@ Create mock response files in `tests/mocks/yourprovider/`:
 ```
 tests/mocks/yourprovider/
 ├── countries.json
+├── regions.json
 ├── packages.json
-├── orders.json
-├── esims.json
+├── package_detail.json
+├── orders_list.json
+├── order_create.json
+├── my_esims.json
+├── esim_detail.json
+├── usage.json
 └── balance.json
 ```
 
-### Write Unit Tests
+### Write API Tests
 
-Create `tests/test_providers/test_yourprovider.py`:
+Create `tests/test_api/test_yourprovider.py`:
 
 ```python
 import pytest
-from esim_gateway.providers.yourprovider import YourProviderProvider
+from pytest_httpx import HTTPXMock
 
-@pytest.fixture
-def provider():
-    return YourProviderProvider(api_key="test_key", sandbox=True)
+class TestYourProviderCatalog:
+    def test_list_countries(
+        self,
+        client,
+        httpx_mock: HTTPXMock,
+        yourprovider_login,
+        yourprovider_countries,
+    ):
+        # Mock authentication if needed
+        httpx_mock.add_response(
+            url="https://sandbox.yourprovider.com/v1/auth",
+            json=yourprovider_login,
+        )
 
-@pytest.mark.asyncio
-async def test_list_countries(provider, mock_response):
-    mock_response("yourprovider/countries.json")
-    response = await provider.list_countries()
-    assert len(response.countries) > 0
-    assert response.countries[0].iso2 == "US"
+        # Mock the actual endpoint
+        httpx_mock.add_response(
+            url="https://sandbox.yourprovider.com/v1/destinations",
+            json=yourprovider_countries,
+        )
+
+        response = client.get(
+            "/catalog/countries",
+            headers={"X-Provider": "yourprovider"},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "countries" in data
+        assert len(data["countries"]) > 0
 ```
 
 ### Run Tests
@@ -305,8 +365,11 @@ async def test_list_countries(provider, mock_response):
 # Run all tests
 uv run pytest
 
-# Run only your provider tests
-uv run pytest tests/test_providers/test_yourprovider.py -v
+# Run with verbose output
+uv run pytest -v
+
+# Run specific provider tests
+uv run pytest tests/test_api/ -k "yourprovider" -v
 
 # Run with coverage
 uv run pytest --cov=esim_gateway --cov-report=term-missing
@@ -314,21 +377,30 @@ uv run pytest --cov=esim_gateway --cov-report=term-missing
 
 ---
 
-## Submitting Your PR
+## Submitting Changes
 
-### Checklist
+### Pull Request Process
 
-Before submitting, ensure:
+1. **Fork** the repository
+2. **Create a branch**: `git checkout -b feature/add-yourprovider`
+3. **Make changes** following the guidelines above
+4. **Test thoroughly**: All tests must pass
+5. **Commit** with clear messages
+6. **Push** and create a Pull Request
 
-- [ ] All required methods implemented
-- [ ] Mapping document created at `docs/providers/PROVIDER_mapping.yaml`
-- [ ] Provider registered in `dependencies.py`
-- [ ] Settings added to `settings.py`
-- [ ] Unit tests written and passing
+### PR Checklist
+
+- [ ] All required `BaseProvider` methods implemented
+- [ ] Status mappings documented and implemented
+- [ ] Error handling with appropriate exceptions
 - [ ] Mock response files created
-- [ ] Code formatted with `ruff format`
-- [ ] Linting passes with `ruff check`
-- [ ] Type checking passes with `pyright`
+- [ ] Tests written and passing
+- [ ] Configuration added to `config.py` and `.env.example`
+- [ ] Provider registered in `registry.py`
+- [ ] `uv run ruff check .` passes
+- [ ] `uv run ruff format --check .` passes
+- [ ] `uv run mypy src/` passes
+- [ ] `uv run pytest` passes
 
 ### PR Template
 
@@ -339,46 +411,30 @@ Before submitting, ensure:
 - Website: [URL]
 - API Docs: [URL]
 
-### Implemented Endpoints
-- [x] list_countries
-- [x] list_packages
-- [x] create_order
-- [x] get_esim
-- [x] get_usage
-- [x] get_balance
-- [ ] list_transactions (not supported by provider)
+### Implemented Features
+- [x] Catalog (countries, regions, packages)
+- [x] Orders (create, list, get)
+- [x] eSIM Management
+- [x] Usage Statistics
+- [x] Account Balance
+- [ ] Transactions (not supported by provider)
+- [ ] Refunds (not supported by provider)
 
 ### Testing
-- [ ] Unit tests passing
-- [ ] Tested with sandbox credentials
+- [x] Unit tests passing
+- [x] Tested with sandbox credentials
 
 ### Notes
-[Any special considerations or limitations]
-```
-
-### Code Quality Commands
-
-```bash
-# Format code
-uv run ruff format src/ tests/
-
-# Lint
-uv run ruff check src/ tests/
-
-# Type check
-uv run pyright
-
-# Run all tests
-uv run pytest
+[Any special considerations, limitations, or quirks]
 ```
 
 ---
 
 ## Need Help?
 
-- Review existing providers (`esimgo.py`, `zetexa.py`) for reference
-- Check the mapping templates in `templates/`
-- Open an issue for questions
-- Join discussions for architecture decisions
+- **Reference implementations**: Check `esimgo.py`, `zetexa.py`, `esimcard.py`
+- **Templates**: See `templates/` directory
+- **Questions**: Open a [Discussion](https://github.com/hamzaplojovic/esim-gateway/discussions)
+- **Bugs**: Open an [Issue](https://github.com/hamzaplojovic/esim-gateway/issues)
 
 Thank you for contributing!

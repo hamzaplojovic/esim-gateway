@@ -13,6 +13,8 @@ def get_provider_instance(provider_name: str) -> BaseProvider:
     if provider_name in _provider_instances:
         return _provider_instances[provider_name]
 
+    instance: BaseProvider
+
     if provider_name == "esimgo":
         from esim_gateway.providers.esimgo import ESimGoProvider
 

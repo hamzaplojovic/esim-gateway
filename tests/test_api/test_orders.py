@@ -472,7 +472,9 @@ class TestESimCardOrders:
             json=esimcard_login,
         )
         httpx_mock.add_response(
-            url=re.compile(r"https://sandbox\.esimcard\.com/api/developer/reseller/my-bundles\?.*page=2.*"),
+            url=re.compile(
+                r"https://sandbox\.esimcard\.com/api/developer/reseller/my-bundles\?.*page=2.*"
+            ),
             json=esimcard_my_esims,
         )
 

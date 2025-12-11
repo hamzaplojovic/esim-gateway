@@ -50,10 +50,16 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM", "ARG"]
-ignore = ["B008"]  # Allow Depends() in function defaults (FastAPI pattern)
+ignore = ["B008", "UP047"]  # B008: Allow Depends() in function defaults; UP047: ParamSpec generics
 
 [tool.ruff.lint.per-file-ignores]
 "src/esim_gateway/core/exceptions.py" = ["N818"]  # Allow Exception suffix naming
+"src/esim_gateway/providers/base.py" = ["ARG002"]  # Base class methods have unused args
+"src/esim_gateway/providers/esimgo.py" = ["ARG002"]  # Unused args in override methods
+"src/esim_gateway/providers/zetexa.py" = ["ARG002"]  # Unused args in override methods
+"src/esim_gateway/core/security.py" = ["ARG001"]  # FastAPI dependency injection
+"src/esim_gateway/main.py" = ["ARG001"]  # Lifespan requires app parameter
+"scripts/*" = ["E501"]  # Scripts can have longer lines
 
 [tool.mypy]
 python_version = "3.13"
